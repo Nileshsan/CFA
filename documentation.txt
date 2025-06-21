@@ -1,0 +1,27 @@
+Business Owner downloads app → onboard them
+
+Step 1: Connect Tally
+- Local: Python Sync Agent connects to Tally desktop
+- Cloud: Tally Web Export → CSV/XML Upload
+
+Step 2: Data Sync
+- Auto-fetch sales, purchases, payments, receipts
+- Push to your backend API (secure)
+
+Step 3: AI & Insights Engine
+- Forecast cash flow (Prophet / XGBoost / LSTM)
+- Segment clients (good payers, late payers, risky)
+- Predict when clients pay
+
+Step 4: Smart Discount Logic
+- For late payers: 
+  - If average delay = 14 days → Offer early-pay discount with timer
+  - Show: “Pay today to save 3% — drops to 1% in 5 days”
+
+Step 5: Dashboards
+- 📱 Accountants: Sync stats, data corrections, reports
+- 👑 Owners: Insights → What’s coming in/out, risky clients, alerts
+
+Step 6: Notifications & Nudges
+- SMS / WhatsApp / Email reminders (API)
+- Push notifications on mobile
