@@ -1,0 +1,11 @@
+[2025-06-24 19:03:20] Loaded TALLY_URL: http://localhost:9000
+[2025-06-24 19:05:38] Loaded TALLY_URL: http://localhost:9000
+[2025-06-24 19:05:45] Sync Data button clicked.
+[2025-06-24 19:05:45] Sending test connection POST to http://localhost:9000
+[2025-06-24 19:05:49] ❌ Connection failed: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE083A900>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-06-24 19:07:24] Tally not connected. Sync aborted.
+[2025-06-24 19:07:36] API Key updated to: your_company_api_key
+[2025-06-24 19:10:40] Sync Data button clicked.
+[2025-06-24 19:10:40] Sending test connection POST to http://localhost:9000
+[2025-06-24 19:10:44] ❌ Connection failed: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE09D8A50>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-06-24 19:10:45] Tally not connected. Sync aborted.

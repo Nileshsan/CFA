@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('config.env', '.')],
+    datas=[('config.env', '.'), ('icon.ico', '.')],
     hiddenimports=['xmltodict', 'dotenv', 'requests', 'cv2'],
     hookspath=[],
     hooksconfig={},
