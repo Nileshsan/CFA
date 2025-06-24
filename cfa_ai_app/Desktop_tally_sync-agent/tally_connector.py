@@ -6,20 +6,34 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TALLY_URL = os.getenv("TALLY_URL")
-API_KEY = os.getenv("API_KEY")
-BACKEND_URL = os.getenv("BACKEND_URL")  # URL to send data to Django
 
-def test_tally_connection():
-    """Test connection with Tally Server"""
+
+def test_tally_connection() -> bool:
+    """Test if Tally is reachable."""
     try:
-        response = requests.get(TALLY_URL)
+        response = requests.get(TALLY_URL, timeout=5)
         return response.status_code == 200
     except Exception as e:
-        print("Connection failed:", e)
+        print(f"❌ Connection failed: {e}")
         return False
 
-def fetch_daybook_data():
-    """Fetch transaction data from Daybook (Sales, Purchase, Receipt, Payment)"""
+
+def send_tally_request(xml_request: str) -> dict | None:
+    """Send XML Request to Tally and return parsed response."""
+    try:
+        response = requests.post(TALLY_URL, data=xml_request, timeout=10)
+        if response.status_code == 200:
+            return xmltodict.parse(response.text)
+        else:
+            print(f"❌ Tally responded with status: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"❌ Error fetching data from Tally: {e}")
+        return None
+
+
+def fetch_daybook_data(start_date="20240401", end_date="20250630") -> dict | None:
+    """Fetch Full Transaction Daybook from Tally."""
     xml_request = f"""
     <ENVELOPE>
         <HEADER>
@@ -30,8 +44,8 @@ def fetch_daybook_data():
                 <REQUESTDESC>
                     <REPORTNAME>Daybook</REPORTNAME>
                     <STATICVARIABLES>
-                        <SVFROMDATE>20240401</SVFROMDATE>  <!-- Start Date -->
-                        <SVTODATE>20250630</SVTODATE>      <!-- End Date -->
+                        <SVFROMDATE>{start_date}</SVFROMDATE>
+                        <SVTODATE>{end_date}</SVTODATE>
                         <EXPLODEFLAG>Yes</EXPLODEFLAG>
                         <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
                     </STATICVARIABLES>
@@ -42,9 +56,10 @@ def fetch_daybook_data():
     """
     return send_tally_request(xml_request)
 
-def fetch_ledger_data():
-    """Fetch Ledger List (Opening Balances)"""
-    xml_request = """
+
+def fetch_ledger_details(start_date="20240401", end_date="20250630") -> dict | None:
+    """Fetch Detailed Ledger Information including opening balances."""
+    xml_request = f"""
     <ENVELOPE>
         <HEADER>
             <TALLYREQUEST>Export Data</TALLYREQUEST>
@@ -52,8 +67,11 @@ def fetch_ledger_data():
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>List of Accounts</REPORTNAME>
+                    <REPORTNAME>Ledger Vouchers</REPORTNAME>
                     <STATICVARIABLES>
+                        <SVFROMDATE>{start_date}</SVFROMDATE>
+                        <SVTODATE>{end_date}</SVTODATE>
+                        <EXPLODEFLAG>Yes</EXPLODEFLAG>
                         <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
                     </STATICVARIABLES>
                 </REQUESTDESC>
@@ -63,51 +81,20 @@ def fetch_ledger_data():
     """
     return send_tally_request(xml_request)
 
-def send_tally_request(xml_request):
-    """Send XML Request to Tally and parse response"""
-    try:
-        response = requests.post(TALLY_URL, data=xml_request)
-        if response.status_code == 200:
-            return xmltodict.parse(response.text)
-        else:
-            print(f"Error: Status Code {response.status_code}")
-            return None
-    except Exception as e:
-        print("Error fetching data:", e)
+
+def fetch_tally_data() -> dict | None:
+    """Fetch both Daybook and Ledger Data from Tally."""
+    print("🔍 Fetching Daybook Data...")
+    daybook_data = fetch_daybook_data()
+
+    print("🔍 Fetching Ledger Details...")
+    ledger_data = fetch_ledger_details()
+
+    if not daybook_data or not ledger_data:
+        print("❌ Failed to fetch some data from Tally.")
         return None
 
-def push_data_to_backend(data_type, data):
-    """Push Tally data to Django backend"""
-    try:
-        response = requests.post(
-            f"{BACKEND_URL}/api/receive-tally-data/",
-            json={"type": data_type, "data": data},
-            headers={'Authorization': f'Bearer {API_KEY}'}
-        )
-        if response.status_code == 200:
-            print(f"{data_type} sync successful.")
-        else:
-            print(f"{data_type} sync failed with status {response.status_code}")
-    except Exception as e:
-        print(f"Error sending {data_type} to backend:", e)
+    print("✅ Fetched Daybook and Ledger successfully.")
+    return {"daybook": daybook_data, "ledger": ledger_data}
 
-def run_sync():
-    """Run full sync process"""
-    if not test_tally_connection():
-        print("Tally is not connected.")
-        return
 
-    print("Syncing Daybook...")
-    daybook_data = fetch_daybook_data()
-    if daybook_data:
-        push_data_to_backend("daybook", daybook_data)
-
-    print("Syncing Ledger...")
-    ledger_data = fetch_ledger_data()
-    if ledger_data:
-        push_data_to_backend("ledger", ledger_data)
-
-    print("Sync Completed Successfully.")
-
-if __name__ == "__main__":
-    run_sync()
