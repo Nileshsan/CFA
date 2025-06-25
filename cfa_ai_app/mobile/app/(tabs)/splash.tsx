@@ -1,9 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Image, StyleSheet, Animated, Easing } from 'react-native';
+import { useRouter } from 'expo-router';
 
-const logo = require('../assets/images/pbs new logo.jpg');
+// Use the PNG PBS logo for compatibility (corrected path)
+const logo = require('../../assets/images/converted-image.png');
 
-export default function SplashScreen({ navigation }: any) {
+export default function SplashScreen() {
+  const router = useRouter();
   const scaleAnim = useRef(new Animated.Value(0.7)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
@@ -23,10 +26,10 @@ export default function SplashScreen({ navigation }: any) {
       }),
     ]).start();
     const timer = setTimeout(() => {
-      navigation.replace('Login');
-    }, 2000);
+      router.replace('/(tabs)/login');
+    }, 5000); // Show splash for 5 seconds
     return () => clearTimeout(timer);
-  }, [navigation]);
+  }, []);
 
   const rotate = rotateAnim.interpolate({
     inputRange: [0, 1],
@@ -41,6 +44,14 @@ export default function SplashScreen({ navigation }: any) {
             { scale: scaleAnim },
             { rotate },
           ],
+          shadowColor: '#0a2a66',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.3,
+          shadowRadius: 16,
+          elevation: 16,
+          backgroundColor: 'rgba(210, 236, 248, 0.8)',
+          borderRadius: 120,
+          padding: 16,
         }}
       >
         <Image source={logo} style={styles.logo} resizeMode="cover" />
@@ -52,7 +63,7 @@ export default function SplashScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(210, 248, 212, 0.8)', // Soft PBS blue background
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -61,12 +72,12 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 100, // Makes the logo circular
     borderWidth: 4,
-    borderColor: '#0a2a66', // Optional: PBS blue border
+    borderColor: '#0a2a66', // PBS blue border
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowColor: '#0a2a66',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 16,
   },
 });
