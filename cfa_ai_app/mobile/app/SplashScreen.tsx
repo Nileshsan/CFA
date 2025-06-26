@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Image, StyleSheet, Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
-import AnimatedGradient from '../components/AnimatedGradient';
+import AnimatedGradient from './components/AnimatedGradient';
 
-const logo = require('../../assets/images/converted-image.png');
+const logo = require('../assets/images/converted-image.png');
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -41,7 +41,7 @@ export default function SplashScreen() {
       ),
     ]).start();
     const timer = setTimeout(() => {
-      router.replace('/(tabs)/login');
+      router.replace('/login');
     }, 5000);
     return () => clearTimeout(timer);
   }, [router]);

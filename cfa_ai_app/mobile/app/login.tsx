@@ -1,25 +1,33 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Platform, Alert } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
-import AnimatedGradient from '../components/AnimatedGradient';
+import AnimatedGradient from './components/AnimatedGradient';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const router = useRouter();
 
-  const handleLogin = () => {
-    // TODO: Implement login logic
-    alert('Login pressed!');
+  const handleLogin = async () => {
+    // Simple demo: accept any non-empty username/password
+    if (username.trim() && password.trim()) {
+      await AsyncStorage.setItem('isLoggedIn', 'true');
+      router.replace('/APIToken');
+    } else {
+      Alert.alert('Login Failed', 'Please enter both username and password.');
+    }
   };
 
   const handleGoogleLogin = () => {
     // TODO: Implement Google login logic
-    alert('Google login pressed!');
+    Alert.alert('Google login pressed!');
   };
 
   const handleRegister = () => {
     // TODO: Navigate to register screen
-    alert('Register link pressed!');
+    Alert.alert('Register link pressed!');
   };
 
   return (
