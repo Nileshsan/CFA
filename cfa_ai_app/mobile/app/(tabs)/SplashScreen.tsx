@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Image, StyleSheet, Animated, Easing } from 'react-native';
+import { useRouter } from 'expo-router';
 import AnimatedGradient from '../components/AnimatedGradient';
 
 const logo = require('../../assets/images/converted-image.png');
 
-export default function SplashScreen({ navigation }: any) {
+export default function SplashScreen() {
+  const router = useRouter();
   const scaleAnim = useRef(new Animated.Value(0.7)).current;
   const glowAnim = useRef(new Animated.Value(0.7)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -39,10 +41,10 @@ export default function SplashScreen({ navigation }: any) {
       ),
     ]).start();
     const timer = setTimeout(() => {
-      navigation.replace('Login');
+      router.replace('/(tabs)/login');
     }, 5000);
     return () => clearTimeout(timer);
-  }, [navigation]);
+  }, [router]);
 
   const rotate = rotateAnim.interpolate({
     inputRange: [0, 1],
