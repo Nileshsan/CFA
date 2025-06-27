@@ -14,7 +14,7 @@ export default function LoginScreen() {
     // Simple demo: accept any non-empty username/password
     if (username.trim() && password.trim()) {
       await AsyncStorage.setItem('isLoggedIn', 'true');
-      router.replace('/APIToken');
+      router.replace('/APIToken'); // After API token, go to Main
     } else {
       Alert.alert('Login Failed', 'Please enter both username and password.');
     }

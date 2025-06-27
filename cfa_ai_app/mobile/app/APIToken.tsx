@@ -4,6 +4,7 @@ import AnimatedGradient from './components/AnimatedGradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import QRCode from 'react-native-qrcode-svg';
+import { useRouter } from 'expo-router';
 
 // Simulate API token generation (in real app, fetch from backend)
 const generateToken = () => {
@@ -12,10 +13,16 @@ const generateToken = () => {
 
 export default function APITokenScreen() {
   const [apiToken] = useState(generateToken());
+  const router = useRouter();
 
   const handleCopy = () => {
     Clipboard.setStringAsync(apiToken);
     Alert.alert('Copied!', 'API token copied to clipboard.');
+  };
+
+  const handleNext = () => {
+    // Go to the next state, e.g., model training or main app
+    router.replace('/Main');
   };
 
   return (
@@ -35,6 +42,10 @@ export default function APITokenScreen() {
         <Text style={styles.info}>
           Use this token in your desktop sync agent to securely link your Tally data with your account.
         </Text>
+        <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
+          <Text style={styles.nextBtnText}>Proceed with Authentication</Text>
+          <Ionicons name="arrow-forward-circle" size={22} color="#fff" style={{ marginLeft: 8 }} />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -107,5 +118,21 @@ const styles = StyleSheet.create({
     color: '#2e7d32',
     fontSize: 14,
     textAlign: 'center',
+  },
+  nextBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2e7d32',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    width: '100%',
+    justifyContent: 'center',
+    marginTop: 18,
+  },
+  nextBtnText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
