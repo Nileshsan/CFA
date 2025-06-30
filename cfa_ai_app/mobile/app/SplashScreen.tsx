@@ -1,14 +1,21 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Animated, Easing, Dimensions, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import LogoImage from '../assets/images/converted-image.png';
 
 const { width, height } = Dimensions.get('window');
 
+// Light palette
+const GREEN = '#b7e4c7';
+const DARK_GREEN = '#40916c';
+const BEIGE = '#f5f5dc';
+const WHITE = '#fff';
+
 export default function SplashScreen() {
   const router = useRouter();
-  
+
   // Animation values
   const logoScale = useRef(new Animated.Value(0)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
@@ -17,14 +24,11 @@ export default function SplashScreen() {
   const titleTranslateY = useRef(new Animated.Value(50)).current;
   const subtitleOpacity = useRef(new Animated.Value(0)).current;
   const subtitleTranslateY = useRef(new Animated.Value(30)).current;
-  const particleAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Start animations sequence
     const animationSequence = Animated.sequence([
-      // Logo entrance with scale and rotation
       Animated.parallel([
         Animated.timing(logoScale, {
           toValue: 1,
@@ -44,8 +48,6 @@ export default function SplashScreen() {
           useNativeDriver: true,
         }),
       ]),
-      
-      // Title entrance
       Animated.parallel([
         Animated.timing(titleOpacity, {
           toValue: 1,
@@ -59,8 +61,6 @@ export default function SplashScreen() {
           useNativeDriver: true,
         }),
       ]),
-      
-      // Subtitle entrance
       Animated.parallel([
         Animated.timing(subtitleOpacity, {
           toValue: 1,
@@ -76,24 +76,7 @@ export default function SplashScreen() {
       ]),
     ]);
 
-    // Continuous animations
-    const pulseAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 1500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
+    // Continuous shimmer animation
     const shimmerAnimation = Animated.loop(
       Animated.timing(shimmerAnim, {
         toValue: 1,
@@ -103,31 +86,16 @@ export default function SplashScreen() {
       })
     );
 
-    const particleAnimation = Animated.loop(
-      Animated.timing(particleAnim, {
-        toValue: 1,
-        duration: 3000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    );
-
-    // Start all animations
     animationSequence.start();
-    pulseAnimation.start();
     shimmerAnimation.start();
-    particleAnimation.start();
 
-    // Navigate after delay
     const timer = setTimeout(() => {
       router.replace('/login');
-    }, 10000); // Show splash for 10 seconds
+    }, 10000);
 
     return () => {
       clearTimeout(timer);
-      pulseAnimation.stop();
       shimmerAnimation.stop();
-      particleAnimation.stop();
     };
   }, []);
 
@@ -142,46 +110,15 @@ export default function SplashScreen() {
     outputRange: [-width, width],
   });
 
-  const particleY = particleAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [height, -100],
-  });
-
   return (
     <View style={styles.container}>
-      {/* Animated Gradient Background */}
+      {/* White-Green Gradient with Light Beige */}
       <LinearGradient
-        colors={['#0a2a66', '#1e3a8a', '#3b82f6', '#60a5fa']}
+        colors={[WHITE, GREEN, BEIGE]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      
-      {/* Floating Particles */}
-      {[...Array(6)].map((_, index) => (
-        <Animated.View
-          key={index}
-          style={[
-            styles.particle,
-            {
-              left: Math.random() * width,
-              transform: [
-                {
-                  translateY: particleY,
-                },
-              ],
-              opacity: 0.3,
-              animationDelay: index * 500,
-            },
-          ]}
-        >
-          <Ionicons 
-            name="diamond" 
-            size={8 + Math.random() * 12} 
-            color="rgba(255,255,255,0.6)" 
-          />
-        </Animated.View>
-      ))}
 
       {/* Main Content Container */}
       <View style={styles.contentContainer}>
@@ -192,7 +129,7 @@ export default function SplashScreen() {
             {
               opacity: logoOpacity,
               transform: [
-                { scale: Animated.multiply(logoScale, pulseAnim) },
+                { scale: logoScale },
                 { rotate: logoRotateInterpolate },
               ],
             },
@@ -200,19 +137,18 @@ export default function SplashScreen() {
         >
           {/* Glow Effect */}
           <View style={styles.glowEffect} />
-          
+
           {/* Logo Background Circle */}
           <LinearGradient
-            colors={['#ffffff', '#f8fafc', '#e2e8f0']}
+            colors={[WHITE, GREEN, BEIGE]}
             style={styles.logoBackground}
           >
-            {/* CFA Logo Icon */}
-            <View style={styles.logoIcon}>
-              <Text style={styles.logoText}>CFA</Text>
-              <View style={styles.logoAccent}>
-                <Ionicons name="trending-up" size={24} color="#0a2a66" />
-              </View>
-            </View>
+            {/* CFA Logo Image */}
+            <Image
+              source={LogoImage}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </LinearGradient>
 
           {/* Shimmer Effect */}
@@ -238,7 +174,7 @@ export default function SplashScreen() {
         >
           <Text style={styles.appTitle}>CFA AI</Text>
           <LinearGradient
-            colors={['#fbbf24', '#f59e0b', '#d97706']}
+            colors={[GREEN, BEIGE]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.titleUnderline}
@@ -257,26 +193,6 @@ export default function SplashScreen() {
         >
           <Text style={styles.subtitle}>Smart Cash Flow Analytics</Text>
           <Text style={styles.tagline}>Powered by Artificial Intelligence</Text>
-        </Animated.View>
-
-        {/* Feature Icons */}
-        <Animated.View
-          style={[
-            styles.featuresContainer,
-            {
-              opacity: subtitleOpacity,
-            },
-          ]}
-        >
-          <View style={styles.featureIcon}>
-            <Ionicons name="analytics" size={20} color="#60a5fa" />
-          </View>
-          <View style={styles.featureIcon}>
-            <Ionicons name="trending-up" size={20} color="#34d399" />
-          </View>
-          <View style={styles.featureIcon}>
-            <Ionicons name="shield-checkmark" size={20} color="#fbbf24" />
-          </View>
         </Animated.View>
       </View>
 
@@ -311,9 +227,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  particle: {
-    position: 'absolute',
-  },
   contentContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -321,61 +234,40 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 40,
+    marginBottom: 36,
     position: 'relative',
   },
   glowEffect: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    shadowColor: '#ffffff',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(183,228,199,0.13)',
+    shadowColor: '#b7e4c7',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
+    shadowOpacity: 0.6,
     shadowRadius: 30,
-    elevation: 20,
+    elevation: 18,
   },
   logoBackground: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 15,
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.3)',
+    shadowColor: '#b7e4c7',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.13,
+    shadowRadius: 16,
+    elevation: 10,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: '#fff',
   },
-  logoIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  logoText: {
-    fontSize: 36,
-    fontWeight: '900',
-    color: '#0a2a66',
-    letterSpacing: 2,
-    textShadowColor: 'rgba(0,0,0,0.1)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  logoAccent: {
-    position: 'absolute',
-    bottom: -8,
-    right: -8,
-    backgroundColor: '#fbbf24',
-    borderRadius: 12,
-    padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+  logoImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   shimmer: {
     position: 'absolute',
@@ -383,90 +275,73 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    width: 30,
-    borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    width: 28,
+    borderRadius: 55,
     transform: [{ skewX: '-20deg' }],
   },
   titleContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 18,
   },
   appTitle: {
-    fontSize: 42,
+    fontSize: 34,
     fontWeight: '900',
-    color: '#ffffff',
-    letterSpacing: 3,
+    color: '#40916c',
+    letterSpacing: 2,
     textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowColor: 'rgba(0,0,0,0.10)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 8,
   },
   titleUnderline: {
     height: 4,
-    width: 80,
+    width: 60,
     borderRadius: 2,
     marginTop: 8,
   },
   subtitleContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 24,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#e2e8f0',
+    color: '#40916c',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
     letterSpacing: 1,
   },
   tagline: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '400',
-    color: '#94a3b8',
+    color: '#b7e4c7',
     textAlign: 'center',
     fontStyle: 'italic',
   },
-  featuresContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 50,
-    gap: 20,
-  },
-  featureIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
   loadingContainer: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 70,
     alignItems: 'center',
     width: '100%',
   },
   loadingBar: {
-    width: 200,
+    width: 150,
     height: 3,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(183,228,199,0.18)',
     borderRadius: 2,
     overflow: 'hidden',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   loadingProgress: {
     height: '100%',
-    backgroundColor: '#fbbf24',
+    backgroundColor: '#b7e4c7',
     borderRadius: 2,
     transformOrigin: 'left',
   },
   loadingText: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: '#40916c',
     fontWeight: '500',
     letterSpacing: 0.5,
   },

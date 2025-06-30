@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
-  Platform, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Platform,
   Alert,
   Keyboard,
   KeyboardAvoidingView,
@@ -13,26 +13,23 @@ import {
   Dimensions,
   Image
 } from 'react-native';
-import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
-  withRepeat, 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withRepeat,
   withSequence,
-  interpolate,
-  Easing
+  Easing,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Leaf } from 'lucide-react-native';
+import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import LogoImage from '../assets/images/converted-image.png';
 
 const { width, height } = Dimensions.get('window');
-
-const logo = require('../assets/images/converted-image.png');
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -40,70 +37,24 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({ username: '', password: '' });
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const router = useRouter();
 
-  // Animation values
+  // Animations
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(50);
-  const scaleAnim = useSharedValue(0.8);
-  const logoRotation = useSharedValue(0);
-  const pulseAnim = useSharedValue(1);
+  const scaleAnim = useSharedValue(0.95);
 
   useEffect(() => {
-    // Initial animations
-    fadeAnim.value = withTiming(1, { duration: 1000 });
-    slideAnim.value = withTiming(0, { duration: 800, easing: Easing.out(Easing.quad) });
-    scaleAnim.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.back(1.2)) });
-    
-    // Logo rotation animation
-    logoRotation.value = withRepeat(
-      withTiming(360, { duration: 10000, easing: Easing.linear }),
-      -1,
-      false
-    );
-
-    // Pulse animation for login button
-    pulseAnim.value = withRepeat(
-      withSequence(
-        withTiming(1.05, { duration: 1500 }),
-        withTiming(1, { duration: 1500 })
-      ),
-      -1,
-      true
-    );
-
-    // Keyboard listeners
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      setKeyboardVisible(true);
-    });
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardVisible(false);
-    });
-
-    return () => {
-      keyboardDidShowListener?.remove();
-      keyboardDidHideListener?.remove();
-    };
+    fadeAnim.value = withTiming(1, { duration: 900 });
+    slideAnim.value = withTiming(0, { duration: 700, easing: Easing.out(Easing.quad) });
+    scaleAnim.value = withTiming(1, { duration: 700, easing: Easing.out(Easing.back(1.2)) });
   }, []);
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
     opacity: fadeAnim.value,
     transform: [
       { translateY: slideAnim.value },
-      { scale: scaleAnim.value }
-    ],
-  }));
-
-  const animatedLogoStyle = useAnimatedStyle(() => ({
-    transform: [
-      { rotate: `${logoRotation.value}deg` }
-    ],
-  }));
-
-  const animatedButtonStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: pulseAnim.value }
+      { scale: scaleAnim.value },
     ],
   }));
 
@@ -133,22 +84,12 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!validateForm()) return;
-
     setIsLoading(true);
-    
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise(resolve => setTimeout(resolve, 1200));
       await AsyncStorage.setItem('isLoggedIn', 'true');
       await AsyncStorage.setItem('username', username);
-      
-      // Success animation
-      scaleAnim.value = withSequence(
-        withTiming(1.1, { duration: 100 }),
-        withTiming(1, { duration: 100 })
-      );
-      
       router.replace('/APIToken');
     } catch (error) {
       Alert.alert('Login Failed', 'Please check your credentials and try again.');
@@ -157,60 +98,50 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    Alert.alert('Coming Soon', 'Google login will be available in the next update!');
-  };
-
-  const handleRegister = () => {
-    Alert.alert('Registration', 'Registration feature coming soon!');
-  };
-
-  const handleForgotPassword = () => {
-    Alert.alert('Forgot Password', 'Password reset feature coming soon!');
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#d4fc79', '#96e6a1']}
+        colors={['#fff', '#b7e4c7', '#f5f5dc']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
-        <KeyboardAvoidingView 
+        <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoid}
         >
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
             <Animated.View style={[styles.logoContainer, animatedContainerStyle]}>
-              <Animated.View style={[styles.logoBackground, animatedLogoStyle]}>
-                <Leaf size={48} color="#ffffff" strokeWidth={2} />
-              </Animated.View>
-              <Text style={styles.appName}>CropFlow AI</Text>
-              <Text style={styles.tagline}>Smart Agriculture Solutions</Text>
+              <View style={styles.logoBackground}>
+                <Image
+                  source={LogoImage}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.appName}>CFA Login</Text>
+              <Text style={styles.tagline}>AI-powered Financial Insights</Text>
             </Animated.View>
 
-            <Animated.View style={[animatedContainerStyle]}>
+            <Animated.View style={animatedContainerStyle}>
               <BlurView intensity={Platform.OS === 'ios' ? 25 : 80} style={styles.loginCard}>
-                <Image source={logo} style={styles.logo} resizeMode="contain" />
-                <Text style={styles.title}>Welcome to CFA</Text>
-                <Text style={styles.subtitle}>AI-powered Tally Insights</Text>
+                <Text style={styles.title}>Sign in to your account</Text>
 
                 <View style={styles.inputContainer}>
                   <View style={styles.inputWrapper}>
-                    <Ionicons name="person-outline" size={20} color="#388e3c" style={styles.inputIcon} />
+                    <Mail size={20} color="#a8e063" style={styles.inputIcon} />
                     <TextInput
                       style={[styles.input, errors.username ? styles.inputError : null]}
                       placeholder="Username"
-                      placeholderTextColor="#388e3caa"
+                      placeholderTextColor="#a8e063aa"
                       value={username}
-                      onChangeText={(text) => {
+                      onChangeText={text => {
                         setUsername(text);
-                        if (errors.username) setErrors({...errors, username: ''});
+                        if (errors.username) setErrors({ ...errors, username: '' });
                       }}
                       autoCapitalize="none"
                       autoCorrect={false}
@@ -221,51 +152,46 @@ export default function LoginScreen() {
 
                 <View style={styles.inputContainer}>
                   <View style={styles.inputWrapper}>
-                    <Ionicons name="lock-closed-outline" size={20} color="#388e3c" style={styles.inputIcon} />
+                    <Lock size={20} color="#a8e063" style={styles.inputIcon} />
                     <TextInput
                       style={[styles.input, errors.password ? styles.inputError : null]}
                       placeholder="Password"
-                      placeholderTextColor="#388e3caa"
+                      placeholderTextColor="#a8e063aa"
                       value={password}
-                      onChangeText={(text) => {
+                      onChangeText={text => {
                         setPassword(text);
-                        if (errors.password) setErrors({...errors, password: ''});
+                        if (errors.password) setErrors({ ...errors, password: '' });
                       }}
                       secureTextEntry={!showPassword}
                     />
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => setShowPassword(!showPassword)}
                       style={styles.eyeIcon}
                     >
-                      {showPassword ? 
-                        <Ionicons name="eye-off-outline" size={20} color="#388e3c" /> : 
-                        <Ionicons name="eye-outline" size={20} color="#388e3c" />
-                      }
+                      {showPassword ? (
+                        <EyeOff size={20} color="#a8e063" />
+                      ) : (
+                        <Eye size={20} color="#a8e063" />
+                      )}
                     </TouchableOpacity>
                   </View>
                   {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
                 </View>
 
-                <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} disabled={isLoading}>
+                  {isLoading ? (
+                    <Text style={styles.loginBtnText}>Signing In...</Text>
+                  ) : (
+                    <>
+                      <LogIn size={20} color="#fff" style={styles.buttonIcon} />
+                      <Text style={styles.loginBtnText}>Login</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
 
-                <Animated.View style={animatedButtonStyle}>
-                  <TouchableOpacity 
-                    style={[styles.loginBtn, isLoading && styles.loginBtnDisabled]} 
-                    onPress={handleLogin}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Text style={styles.loginBtnText}>Signing In...</Text>
-                    ) : (
-                      <>
-                        <Ionicons name="log-in-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-                        <Text style={styles.loginBtnText}>Login</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </Animated.View>
+                <TouchableOpacity style={styles.forgotPassword}>
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
 
                 <View style={styles.divider}>
                   <View style={styles.dividerLine} />
@@ -273,17 +199,18 @@ export default function LoginScreen() {
                   <View style={styles.dividerLine} />
                 </View>
 
-                <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleLogin}>
+                <TouchableOpacity style={styles.googleBtn} onPress={() => Alert.alert('Coming Soon', 'Google login will be available soon!')}>
                   <View style={styles.googleIcon}>
-                    <FontAwesome name="google" size={20} color="#fbc02d" style={{ marginRight: 10 }} />
-                    <Text style={styles.googleBtnText}>Continue with Google</Text>
+                    <Text style={styles.googleIconText}>G</Text>
                   </View>
+                  <Text style={styles.googleBtnText}>Continue with Google</Text>
                 </TouchableOpacity>
 
                 <View style={styles.registerLink}>
-                  <Text style={{ color: '#388e3c' }}>Don't have an account?{' '}
-                    <Text style={styles.registerText} onPress={handleRegister}>Register here</Text>
-                  </Text>
+                  <Text style={styles.registerPrompt}>Don't have an account? </Text>
+                  <TouchableOpacity onPress={() => Alert.alert('Registration', 'Registration coming soon!')}>
+                    <Text style={styles.registerText}>Register here</Text>
+                  </TouchableOpacity>
                 </View>
               </BlurView>
             </Animated.View>
@@ -294,16 +221,12 @@ export default function LoginScreen() {
   );
 }
 
+
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  gradient: {
-    flex: 1,
-  },
-  keyboardAvoid: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  gradient: { flex: 1 },
+  keyboardAvoid: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -312,195 +235,161 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
   },
   logoBackground: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(183,228,199,0.18)', // very light green glass
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
+    marginBottom: 14,
+    shadowColor: '#b7e4c7',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.13,
+    shadowRadius: 10,
     elevation: 8,
+  },
+  logoImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
   },
   appName: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: '800',
-    color: '#ffffff',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  tagline: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  loginCard: {
-    width: '92%',
-    maxWidth: 410,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(251,230,109,0.45)',
-    padding: 36,
-    alignItems: 'center',
-    shadowColor: '#388e3c',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.18,
-    shadowRadius: 32,
-    elevation: 16,
-    backdropFilter: Platform.OS === 'web' ? 'blur(16px)' : undefined,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#8bc34a',
-    backgroundColor: '#fff',
-    shadowColor: '#fbc02d',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#388e3c',
-    marginBottom: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Poppins' : undefined,
+    color: '#5b8c5a', // softer green
     textAlign: 'center',
     letterSpacing: 1.1,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#fbc02d',
-    marginBottom: 18,
+  tagline: {
+    fontSize: 15,
+    color: '#b2b200', // soft yellow-green
     textAlign: 'center',
-    fontWeight: '600',
-    letterSpacing: 0.8,
+    marginTop: 2,
+    marginBottom: 2,
   },
-  inputContainer: {
+  loginCard: {
+    width: '96%',
+    maxWidth: 410,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#e6ee9c',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 32,
+    elevation: 12,
     marginBottom: 20,
   },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(102, 126, 234, 0.3)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  inputIcon: {
-    marginLeft: 16,
-    marginRight: 12,
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#5b8c5a',
+    marginBottom: 22,
+    textAlign: 'center',
+    letterSpacing: 1.1,
   },
   input: {
     flex: 1,
-    paddingVertical: 16,
-    paddingRight: 16,
-    fontSize: 16,
-    color: '#333',
-    backgroundColor: 'rgba(251, 230, 109, 0.85)',
+    backgroundColor: 'rgba(255,255,255,0.97)',
     borderRadius: 12,
-    marginBottom: 18,
+    padding: 14,
+    fontSize: 16,
+    color: '#5b8c5a',
+    borderWidth: 0,
     fontWeight: '500',
     letterSpacing: 0.5,
   },
   inputError: {
-    borderColor: '#ff4757',
+    borderWidth: 1.5,
+    borderColor: '#ff6f61',
+  },
+  inputContainer: {
+    marginBottom: 16,
+    width: '100%',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(245, 255, 250, 0.95)', // very light green
+    borderRadius: 14,
     borderWidth: 1,
+    borderColor: 'rgba(200,230,201,0.18)',
+    shadowColor: '#b2dfdb',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    paddingRight: 8,
   },
-  eyeIcon: {
-    padding: 16,
-  },
-  errorText: {
-    color: '#ff4757',
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 24,
-  },
-  forgotPasswordText: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 14,
-    textDecorationLine: 'underline',
+  inputIcon: {
+    marginLeft: 12,
+    marginRight: 8,
   },
   loginBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#8bc34a',
+    backgroundColor: '#b2df76', // lighter green-yellow
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 28,
     width: '100%',
+    justifyContent: 'center',
     marginTop: 4,
     marginBottom: 10,
-    shadowColor: '#fbc02d',
+    shadowColor: '#f9fbe7',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.13,
     shadowRadius: 8,
     elevation: 6,
   },
-  loginBtnDisabled: {
-    opacity: 0.7,
-  },
+  
   loginBtnText: {
     color: '#fff',
     fontWeight: '700',
     fontSize: 17,
     letterSpacing: 0.5,
   },
+  buttonIcon: {
+    marginRight: 8,
+  },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 18,
+    marginTop: 8,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(200,230,201,0.3)',
   },
   dividerText: {
-    color: 'rgba(255, 255, 255, 0.6)',
-    paddingHorizontal: 16,
+    color: '#b2b200',
+    paddingHorizontal: 12,
     fontSize: 14,
   },
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#fffde7',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#fbc02d',
+    borderColor: '#f9e79f',
     paddingVertical: 12,
     paddingHorizontal: 22,
     width: '100%',
-    marginTop: 10,
-    marginBottom: 10,
-    shadowColor: '#fbc02d',
+    justifyContent: 'center',
+    marginTop: 4,
+    marginBottom: 8,
+    shadowColor: '#f9e79f',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 4,
   },
@@ -508,10 +397,15 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#4285f4',
+    backgroundColor: '#b2b200',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+  },
+  googleIconText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
   },
   googleBtnText: {
     color: '#444',
@@ -520,12 +414,40 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   registerLink: {
-    marginTop: 20,
-    fontSize: 15,
+    marginTop: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  registerPrompt: {
+    color: '#b2b200',
+    fontSize: 14,
   },
   registerText: {
     fontWeight: 'bold',
-    color: '#388e3c',
+    color: '#5b8c5a',
     textDecorationLine: 'underline',
+    fontSize: 14,
+  },
+  errorText: {
+    color: '#ff6f61',
+    fontSize: 12,
+    marginTop: 2,
+    marginLeft: 4,
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 8,
+  },
+  forgotPasswordText: {
+    color: '#b2b200',
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 12,
+    padding: 4,
+    zIndex: 1,
   },
 });
