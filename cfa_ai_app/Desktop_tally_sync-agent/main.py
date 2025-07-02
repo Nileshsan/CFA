@@ -1,12 +1,20 @@
 import os
 import sys
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from tally_connector import test_tally_connection, fetch_tally_data
 from api_connector import send_data_to_backend
 from dotenv import load_dotenv
 import cv2
 import datetime
+from PIL import Image, ImageTk
+import threading
+
+# Helper to get resource path for PyInstaller
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
 # DLL path fix for PyInstaller
 if getattr(sys, 'frozen', False):
@@ -36,28 +44,54 @@ def log(msg):
         f.write(f"[{timestamp}] {msg}\n")
     print(f"[LOG] {msg}")
 
-# GUI Setup
+# Modern GUI Setup
 app = tk.Tk()
 app.title("CFA Tally Sync Agent")
-app.geometry("500x400")
-app.configure(bg="#f0f0f0")
+app.geometry("500x480")
+app.configure(bg="#f8fff8")
+app.iconbitmap(resource_path('build_output/icon.ico'))
 
-tk.Label(app, text="CFA Tally Sync Agent", font=("Arial", 20, "bold"), bg="#f0f0f0", fg="#333").pack(pady=15)
+# Logo
+logo_path = resource_path('build_output/icon.ico')
+logo_img = Image.open(logo_path).resize((64, 64))
+logo_photo = ImageTk.PhotoImage(logo_img)
+logo_label = tk.Label(app, image=logo_photo, bg="#f8fff8")
+logo_label.pack(pady=(18, 6))
 
-tk.Label(app, text="Enter API Key:", font=("Arial", 12), bg="#f0f0f0").pack(pady=5)
-api_entry = tk.Entry(app, width=45, font=("Arial", 12))
-api_entry.pack(pady=5)
+# Title
+tk.Label(app, text="CFA Tally Sync Agent", font=("Segoe UI", 22, "bold"), bg="#f8fff8", fg="#2e7d32").pack(pady=(0, 10))
+
+# API Key Entry
+api_frame = tk.Frame(app, bg="#f8fff8")
+api_frame.pack(pady=5)
+tk.Label(api_frame, text="Enter API Key:", font=("Segoe UI", 12), bg="#f8fff8").pack(side=tk.LEFT, padx=(0, 8))
+api_entry = ttk.Entry(api_frame, width=36, font=("Segoe UI", 12))
+api_entry.pack(side=tk.LEFT)
 api_entry.insert(0, api_key)
 
-button_frame = tk.Frame(app, bg="#f0f0f0")
+# Button Styles
+style = ttk.Style()
+style.theme_use('clam')
+style.configure('TButton', font=("Segoe UI", 11, "bold"), padding=8, borderwidth=0, relief="flat", background="#b7e4c7", foreground="#2e7d32")
+style.map('TButton', background=[('active', '#a5d6a7')])
+
+button_frame = tk.Frame(app, bg="#f8fff8")
 button_frame.pack(pady=10)
 
-tk.Button(button_frame, text="Save API Key", command=lambda: update_api_key(), height=1, width=15, bg="#4CAF50", fg="white").grid(row=0, column=0, padx=10)
-tk.Button(button_frame, text="Scan API Key QR", command=lambda: scan_qr(), height=1, width=15, bg="#2196F3", fg="white").grid(row=0, column=1, padx=10)
-tk.Button(app, text="Sync Data Now", command=lambda: sync_data(), height=2, width=20, bg="#FF5722", fg="white", font=("Arial", 12, "bold")).pack(pady=20)
+tt_save = ttk.Button(button_frame, text="Save API Key", command=lambda: update_api_key(), width=16)
+tt_save.grid(row=0, column=0, padx=8)
+tt_qr = ttk.Button(button_frame, text="Scan API Key QR", command=lambda: scan_qr(), width=16)
+tt_qr.grid(row=0, column=1, padx=8)
 
-status_label = tk.Label(app, text="", font=("Arial", 12), bg="#f0f0f0")
-status_label.pack(pady=10)
+tt_sync = ttk.Button(app, text="Sync Data Now", command=lambda: sync_data_threaded(), width=22)
+tt_sync.pack(pady=18)
+
+# Progress Bar
+progress = ttk.Progressbar(app, orient="horizontal", length=320, mode="indeterminate")
+progress.pack(pady=(0, 10))
+
+status_label = tk.Label(app, text="", font=("Segoe UI", 12), bg="#f8fff8")
+status_label.pack(pady=8)
 
 def save_api_key_to_config(key):
     with open(CONFIG_FILE, "w") as file:
@@ -87,7 +121,7 @@ def scan_qr():
         data, bbox, _ = detector.detectAndDecode(frame)
         if bbox is not None:
             for i in range(len(bbox)):
-                cv2.line(frame, tuple(bbox[i][0]), tuple(bbox[(i + 1) % len(bbox)][0]), color=(255, 0, 0), thickness=2)
+                cv2.line(frame, tuple(bbox[i][0]), tuple(bbox[(i + 1) % len(bbox)][0]), color=(183, 228, 199), thickness=2)
 
             if data:
                 api_key = data.strip()
@@ -103,6 +137,9 @@ def scan_qr():
     cap.release()
     cv2.destroyAllWindows()
 
+def sync_data_threaded():
+    threading.Thread(target=sync_data, daemon=True).start()
+
 def sync_data():
     log("Sync Data button clicked.")
     if not api_key:
@@ -110,22 +147,24 @@ def sync_data():
         log("API Key not set. Sync aborted.")
         return
 
-    status_label.config(text="Connecting to Tally...", fg="blue")
+    status_label.config(text="Connecting to Tally...", fg="#2e7d32")
+    progress.start(10)
     app.update_idletasks()
 
     if not test_tally_connection():
         messagebox.showerror("Error", "Tally not connected. Please open Tally and load the company.")
-        status_label.config(text="Tally not connected.", fg="red")
+        status_label.config(text="Tally not connected.", fg="#d32f2f")
+        progress.stop()
         log("Tally not connected. Sync aborted.")
         return
 
-    status_label.config(text="Fetching data from Tally...", fg="blue")
+    status_label.config(text="Fetching data from Tally...", fg="#2e7d32")
     app.update_idletasks()
     log("Tally connected. Fetching data...")
 
     all_data = fetch_tally_data()
-    if all_data and all_data["daybook"] and all_data["ledger"]:
-        status_label.config(text="Sending data to backend...", fg="blue")
+    if all_data and all_data.get("daybook") and all_data.get("ledger"):
+        status_label.config(text="Sending data to backend...", fg="#2e7d32")
         app.update_idletasks()
         log("Data fetched from Tally. Sending to backend...")
 
@@ -134,16 +173,17 @@ def sync_data():
 
         if success_daybook and success_ledger:
             messagebox.showinfo("Success", "Data synced successfully!")
-            status_label.config(text="Data synced successfully!", fg="green")
+            status_label.config(text="Data synced successfully!", fg="#388e3c")
             log("Data synced to backend successfully.")
         else:
             messagebox.showerror("Error", "Failed to send some data to backend.")
-            status_label.config(text="Partial sync. Check logs.", fg="orange")
+            status_label.config(text="Partial sync. Check logs.", fg="#fbc02d")
             log("Failed to sync some data to backend.")
     else:
         messagebox.showerror("Error", "No data fetched from Tally.")
-        status_label.config(text="No data fetched.", fg="red")
+        status_label.config(text="No data fetched.", fg="#d32f2f")
         log("No data fetched from Tally.")
+    progress.stop()
 
 app.mainloop()
 

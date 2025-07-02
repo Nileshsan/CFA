@@ -2,4 +2,5 @@ requests
 xmltodict
 python-dotenv
 tk
-python-donenv
+opencv-python
+Pillow
