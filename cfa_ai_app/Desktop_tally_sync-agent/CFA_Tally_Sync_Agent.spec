@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('config.env', '.'), ('build_output\\icon.ico', 'build_output')],
+    datas=[('config.env', '.'), ('icon.ico', '.')],
     hiddenimports=['xmltodict', 'dotenv', 'requests', 'cv2', 'PIL', 'PIL.Image', 'PIL.ImageTk'],
     hookspath=[],
     hooksconfig={},
@@ -35,5 +35,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['build_output\\icon.ico'],
 )
