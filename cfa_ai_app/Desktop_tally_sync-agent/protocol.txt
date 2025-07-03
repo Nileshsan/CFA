@@ -27,3 +27,19 @@ pyinstaller --clean --onefile --noconsole ^
 --name "CFA_Tally_Sync_Agent" ^
 --distpath ./build_output ^
 --log-level=INFO main.py
+
+
+
+
+pyinstaller --clean --onefile --noconsole ^
+--hidden-import=xmltodict ^
+--hidden-import=dotenv ^
+--hidden-import=requests ^
+--hidden-import=cv2 ^
+--hidden-import=PIL ^
+--hidden-import=PIL.Image ^
+--hidden-import=PIL.ImageTk ^
+--add-data "config.env;." ^
+--name "CFA_Tally_Sync_Agent" ^
+--distpath ./build_output ^
+--log-level=INFO main.py

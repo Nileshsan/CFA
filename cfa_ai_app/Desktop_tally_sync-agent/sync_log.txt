@@ -9,3 +9,8 @@
 [2025-06-24 19:10:40] Sending test connection POST to http://localhost:9000
 [2025-06-24 19:10:44] ❌ Connection failed: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE09D8A50>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
 [2025-06-24 19:10:45] Tally not connected. Sync aborted.
+[2025-07-02 20:15:19] Loaded TALLY_URL: None
+[2025-07-02 20:15:22] Sync Data button clicked.
+[2025-07-02 20:15:22] Sending test connection POST to None
+[2025-07-02 20:15:22] ❌ Connection failed: Invalid URL 'None': No scheme supplied. Perhaps you meant https://None?
+[2025-07-03 10:01:14] Tally not connected. Sync aborted.

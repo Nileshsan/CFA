@@ -12,6 +12,7 @@ import threading
 
 # Helper to get resource path for PyInstaller
 def resource_path(relative_path):
+    import sys, os
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
@@ -49,14 +50,22 @@ app = tk.Tk()
 app.title("CFA Tally Sync Agent")
 app.geometry("500x480")
 app.configure(bg="#f8fff8")
-app.iconbitmap(resource_path('build_output/icon.ico'))
+
+# Use a simple icon filename for better compatibility
+icon_filename = 'appicon.ico'  # Rename your .ico file to this for best results
+icon_path = resource_path(f'build_output/{icon_filename}')
+try:
+    app.iconbitmap(icon_path)
+except Exception as e:
+    log(f"Failed to set icon: {e}")
 
 # Logo
-logo_path = resource_path('build_output/icon.ico')
-logo_img = Image.open(logo_path).resize((64, 64))
-logo_photo = ImageTk.PhotoImage(logo_img)
-logo_label = tk.Label(app, image=logo_photo, bg="#f8fff8")
-logo_label.pack(pady=(18, 6))
+try:
+    logo_img = Image.open(icon_path).resize((64, 64))
+    logo_photo = ImageTk.PhotoImage(logo_img)
+    logo_label = tk.Label(app, image=logo_photo, bg="#f8fff8")
+except Exception as e:
+    log(f"Failed to load logo image: {e}")
 
 # Title
 tk.Label(app, text="CFA Tally Sync Agent", font=("Segoe UI", 22, "bold"), bg="#f8fff8", fg="#2e7d32").pack(pady=(0, 10))
