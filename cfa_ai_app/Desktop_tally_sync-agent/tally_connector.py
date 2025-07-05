@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 import sys
 import datetime
+from tkinter import messagebox
 
 # Logging setup
 LOG_FILE = os.path.join(os.path.dirname(__file__), 'sync_log.txt')
@@ -28,7 +29,7 @@ log(f"Loaded TALLY_URL: {TALLY_URL}")
 
 
 def test_tally_connection():
-    """Test if Tally is reachable using a valid XML request (Company Info)."""
+    """Test if Tally is reachable using a valid XML request (List of Accounts for Ledgers)."""
     test_request = """
     <ENVELOPE>
         <HEADER>
@@ -37,7 +38,11 @@ def test_tally_connection():
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>Company Info</REPORTNAME>
+                    <REPORTNAME>List of Accounts</REPORTNAME>
+                    <STATICVARIABLES>
+                        <ACCOUNTTYPE>Ledger</ACCOUNTTYPE>
+                        <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
+                    </STATICVARIABLES>
                 </REQUESTDESC>
             </EXPORTDATA>
         </BODY>
@@ -45,7 +50,8 @@ def test_tally_connection():
     """
     try:
         log(f"Sending test connection POST to {TALLY_URL}")
-        response = requests.post(TALLY_URL, data=test_request, timeout=5)
+        messagebox.showinfo("Please Wait", "Tally is processing your request.\n\nFor large data or slow devices, this may take up to 2 minutes. Please be patient and do not close Tally or this app.")
+        response = requests.post(TALLY_URL, data=test_request, timeout=150)  # 2 minutes
         log(f"Test connection response: status={response.status_code}, text={response.text[:200]}")
         if response.status_code == 200 and "<ENVELOPE>" in response.text:
             return True
@@ -53,23 +59,53 @@ def test_tally_connection():
             log(f"❌ Invalid response from Tally: {response.text}")
             return False
     except Exception as e:
-        log(f"❌ Connection failed: {e}")
+        import traceback
+        error_details = traceback.format_exc()
+        log(f"❌ Connection failed: {e}\n{error_details}")
+        print(f"❌ Connection failed: {e}\n{error_details}")
         return False
 
 
 def send_tally_request(xml_request: str) -> dict | None:
-    """Send XML Request to Tally and return parsed response."""
+    """Send XML Request to Tally and return parsed response. Handles Tally errors gracefully."""
     try:
         log(f"Sending data request to {TALLY_URL} with XML: {xml_request[:100]}")
-        response = requests.post(TALLY_URL, data=xml_request, timeout=10)
+        messagebox.showinfo("Please Wait", "Tally is processing your request.\n\nFor large data or slow devices, this may take up to 2 minutes. Please be patient and do not close Tally or this app.")
+        response = requests.post(TALLY_URL, data=xml_request, timeout=120)  # 2 minutes
         log(f"Data request response: status={response.status_code}, text={response.text[:200]}")
         if response.status_code == 200:
-            return xmltodict.parse(response.text)
+            # Check for Tally error in response
+            if any(err in response.text for err in ['<LINEERROR>', 'Error in TDL', 'No PARTS', 'No LINES', 'No BUTTONS']):
+                log(f"❌ Tally returned error: {response.text}")
+                from tkinter import messagebox
+                messagebox.showerror("Tally Error", f"Tally returned error. Please check Tally and try again.\n\n{response.text}")
+                return None
+            if '<ENVELOPE>' not in response.text:
+                log(f"❌ Tally response missing <ENVELOPE>: {response.text}")
+                from tkinter import messagebox
+                messagebox.showerror("Tally Error", f"Tally did not return valid data.\n\n{response.text}")
+                return None
+            try:
+                return xmltodict.parse(response.text)
+            except Exception as parse_err:
+                log(f"❌ Failed to parse Tally XML: {parse_err}\nResponse: {response.text}")
+                from tkinter import messagebox
+                messagebox.showerror("Tally Error", f"Failed to parse Tally XML.\n\n{parse_err}\n\n{response.text}")
+                return None
         else:
             log(f"❌ Tally responded with status: {response.status_code}")
+            from tkinter import messagebox
+            messagebox.showerror("Tally Error", f"Tally responded with status: {response.status_code}")
             return None
+    except requests.exceptions.Timeout:
+        log("❌ Timeout while connecting to Tally.")
+        from tkinter import messagebox
+        messagebox.showerror("Tally Error", "Timeout while connecting to Tally. Please check if Tally is running and accessible.")
+        return None
     except Exception as e:
         log(f"❌ Error fetching data from Tally: {e}")
+        from tkinter import messagebox
+        messagebox.showerror("Tally Error", f"Error fetching data from Tally: {e}")
         return None
 
 
@@ -124,7 +160,7 @@ def fetch_ledger_details(start_date="20240401", end_date="20250630") -> dict | N
 
 
 def fetch_ledger_masters() -> list:
-    """Fetch all ledger masters with opening balances."""
+    """Fetch all ledger masters with opening balances, under category, and amount."""
     xml_request = """
     <ENVELOPE>
         <HEADER>
@@ -160,6 +196,7 @@ def fetch_ledger_masters() -> list:
         for account in accounts:
             ledger = account.get('LEDGER', {})
             name = ledger.get('@NAME', '')
+            under = ledger.get('PARENT', '')  # Category/Group
             opening_balance = ledger.get('OPENINGBALANCE', '0').replace(' Dr', '').replace(' Cr', '').strip()
 
             try:
@@ -170,10 +207,12 @@ def fetch_ledger_masters() -> list:
             if opening_balance_value != 0:
                 ledgers.append({
                     "name": name,
-                    "opening_balance": opening_balance_value
+                    "under": under,
+                    "opening_balance": opening_balance_value,
+                    "amount": opening_balance_value
                 })
 
-        log(f"✅ Extracted {len(ledgers)} ledgers with opening balances.")
+        log(f"✅ Extracted {len(ledgers)} ledgers with opening balances, under category, and amount.")
         return ledgers
 
     except Exception as e:

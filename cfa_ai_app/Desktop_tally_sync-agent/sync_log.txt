@@ -1,16 +1,55 @@
-[2025-06-24 19:03:20] Loaded TALLY_URL: http://localhost:9000
-[2025-06-24 19:05:38] Loaded TALLY_URL: http://localhost:9000
-[2025-06-24 19:05:45] Sync Data button clicked.
-[2025-06-24 19:05:45] Sending test connection POST to http://localhost:9000
-[2025-06-24 19:05:49] ❌ Connection failed: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE083A900>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
-[2025-06-24 19:07:24] Tally not connected. Sync aborted.
-[2025-06-24 19:07:36] API Key updated to: your_company_api_key
-[2025-06-24 19:10:40] Sync Data button clicked.
-[2025-06-24 19:10:40] Sending test connection POST to http://localhost:9000
-[2025-06-24 19:10:44] ❌ Connection failed: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE09D8A50>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
-[2025-06-24 19:10:45] Tally not connected. Sync aborted.
-[2025-07-02 20:15:19] Loaded TALLY_URL: None
-[2025-07-02 20:15:22] Sync Data button clicked.
-[2025-07-02 20:15:22] Sending test connection POST to None
-[2025-07-02 20:15:22] ❌ Connection failed: Invalid URL 'None': No scheme supplied. Perhaps you meant https://None?
-[2025-07-03 10:01:14] Tally not connected. Sync aborted.
+[2025-07-04 16:23:27] Loaded TALLY_URL: None
+[2025-07-04 16:23:30] Sync Data button clicked.
+[2025-07-04 16:23:30] Sending test connection POST to None
+[2025-07-04 16:23:30] ❌ Connection failed: Invalid URL 'None': No scheme supplied. Perhaps you meant https://None?
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\Desktop_tally_sync-agent\tally_connector.py", line 52, in test_tally_connection
+    response = requests.post(TALLY_URL, data=test_request, timeout=20)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 575, in request
+    prep = self.prepare_request(req)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 484, in prepare_request
+    p.prepare(
+    ~~~~~~~~~^
+        method=request.method.upper(),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+        hooks=merge_hooks(request.hooks, self.hooks),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\models.py", line 367, in prepare
+    self.prepare_url(url, params)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\models.py", line 438, in prepare_url
+    raise MissingSchema(
+    ...<2 lines>...
+    )
+requests.exceptions.MissingSchema: Invalid URL 'None': No scheme supplied. Perhaps you meant https://None?
+
+[2025-07-04 16:23:34] Tally not connected. Sync aborted.
+[2025-07-05 15:42:17] Loaded TALLY_URL: localhost:9000
+[2025-07-05 15:42:22] Sync Data button clicked.
+[2025-07-05 15:42:22] Sending test connection POST to localhost:9000
+[2025-07-05 15:42:24] ❌ Connection failed: No connection adapters were found for 'localhost:9000'
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\Desktop_tally_sync-agent\tally_connector.py", line 54, in test_tally_connection
+    response = requests.post(TALLY_URL, data=test_request, timeout=150)  # 2 minutes
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 697, in send
+    adapter = self.get_adapter(url=request.url)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 792, in get_adapter
+    raise InvalidSchema(f"No connection adapters were found for {url!r}")
+requests.exceptions.InvalidSchema: No connection adapters were found for 'localhost:9000'
+
+[2025-07-05 15:42:26] Tally not connected. Sync aborted.
