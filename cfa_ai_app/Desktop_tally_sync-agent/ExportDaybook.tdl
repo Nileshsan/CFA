@@ -9,15 +9,15 @@
 
 [Form: Custom Data XML Form]
     Part    : Custom Ledgers Part
-    Part    : Custom Daybook Part
 
 [Part: Custom Ledgers Part]
     Line    : Custom Ledgers Title
-    Repeat  : Custom Ledgers Line : Collection:Custom Ledgers
+    Repeat  : Custom Ledgers Line : Custom Ledgers
+    Scroll  : Vertical
 
 [Line: Custom Ledgers Title]
     Field   : Simple Field
-    Local   : Field : Set as : "LEDGERS: Name | Under | Opening Balance"
+    Local   : Field : Simple Field : Set as : "LEDGERS: Name | Under | Opening Balance"
 
 [Line: Custom Ledgers Line]
     Field   : Custom Ledger Name, Custom Ledger Under, Custom Ledger Opening
@@ -31,34 +31,6 @@
 
 [Collection: Custom Ledgers]
     Type    : Ledger
+    Fetch   : Name, Parent, OpeningBalance
 
-[Part: Custom Daybook Part]
-    Line    : Custom Daybook Title
-    Repeat  : Custom Daybook Line : Collection:Custom DaybookVouchers
-
-[Line: Custom Daybook Title]
-    Field   : Simple Field
-    Local   : Field : Set as : "DAYBOOK: Date | Voucher Type | Amount | Party Name"
-
-[Line: Custom Daybook Line]
-    Field   : Custom Voucher Date, Custom Voucher Type, Custom Voucher Amount, Custom Voucher Party
-
-[Field: Custom Voucher Date]
-    Set as  : $Date
-[Field: Custom Voucher Type]
-    Set as  : $VchType
-[Field: Custom Voucher Amount]
-    Set as  : $Amount
-[Field: Custom Voucher Party]
-    Set as  : $PartyLedgerName
-
-[Collection: Custom DaybookVouchers]
-    Type    : Voucher
-    Fetch   : Date, VchType, Amount, PartyLedgerName
-    Filter  : CustomVchTypeFilter, CustomDateRange
-
-[System: Formulae]
-    CustomVchTypeFilter : $VchType IN ("Sales", "Receipt", "Payment", "Purchase")
-    CustomDateRange    : $Date >= ##SVFromDate AND $Date <= ##SVToDate
-    LocQuit : "Quit"
 

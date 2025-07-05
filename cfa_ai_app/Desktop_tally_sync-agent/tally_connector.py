@@ -29,7 +29,7 @@ log(f"Loaded TALLY_URL: {TALLY_URL}")
 
 
 def test_tally_connection():
-    """Test if Tally is reachable using a valid XML request (List of Accounts for Ledgers)."""
+    """Test if Tally is reachable using a valid XML request (Custom Data XML report from TDL)."""
     test_request = """
     <ENVELOPE>
         <HEADER>
@@ -38,11 +38,7 @@ def test_tally_connection():
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>List of Accounts</REPORTNAME>
-                    <STATICVARIABLES>
-                        <ACCOUNTTYPE>Ledger</ACCOUNTTYPE>
-                        <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
-                    </STATICVARIABLES>
+                    <REPORTNAME>Custom Data XML</REPORTNAME>
                 </REQUESTDESC>
             </EXPORTDATA>
         </BODY>
