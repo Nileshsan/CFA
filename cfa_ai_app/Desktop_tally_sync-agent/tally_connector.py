@@ -4,7 +4,9 @@ import os
 from dotenv import load_dotenv
 import sys
 import datetime
-from tkinter import messagebox
+from tkinter import messagebox  # <-- moved to top, always available
+import re
+import html
 
 # Logging setup
 LOG_FILE = os.path.join(os.path.dirname(__file__), 'sync_log.txt')
@@ -29,7 +31,7 @@ log(f"Loaded TALLY_URL: {TALLY_URL}")
 
 
 def test_tally_connection():
-    """Test if Tally is reachable using a valid XML request (Custom Data XML report from TDL)."""
+    """Test if Tally is reachable using a valid XML request (using default Company Info report)."""
     test_request = """
     <ENVELOPE>
         <HEADER>
@@ -38,7 +40,7 @@ def test_tally_connection():
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>Custom Data XML</REPORTNAME>
+                    <REPORTNAME>List of Accounts</REPORTNAME>
                 </REQUESTDESC>
             </EXPORTDATA>
         </BODY>
@@ -62,6 +64,42 @@ def test_tally_connection():
         return False
 
 
+def clean_invalid_xml_chars(xml_str):
+    # Remove invalid XML 1.0 characters and decode HTML entities
+    cleaned = re.sub(r'[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]', ' ', xml_str)
+    return html.unescape(cleaned)
+
+
+def clean_narration_for_xml(narration):
+    if not narration or not isinstance(narration, str):
+        return "-"
+    narration = narration.replace("&", " ")
+    narration = narration.replace("<", " ")
+    narration = narration.replace(">", " ")
+    narration = narration.replace("\"", " ")
+    narration = narration.replace("'", " ")
+    narration = narration.replace(",", " ")
+    narration = narration.replace("\n", " ")
+    narration = narration.replace("\t", " ")
+    narration = narration.strip()
+    if not narration:
+        return "-"
+    return narration
+
+
+def postprocess_vouchers(data):
+    """Recursively clean all Narration fields in parsed Tally data."""
+    if isinstance(data, dict):
+        for k, v in data.items():
+            if k.upper() == 'NARRATIONFIELDEXPORT':
+                data[k] = clean_narration_for_xml(v)
+            else:
+                postprocess_vouchers(v)
+    elif isinstance(data, list):
+        for item in data:
+            postprocess_vouchers(item)
+
+
 def send_tally_request(xml_request: str) -> dict | None:
     """Send XML Request to Tally and return parsed response. Handles Tally errors gracefully."""
     try:
@@ -73,40 +111,38 @@ def send_tally_request(xml_request: str) -> dict | None:
             # Check for Tally error in response
             if any(err in response.text for err in ['<LINEERROR>', 'Error in TDL', 'No PARTS', 'No LINES', 'No BUTTONS']):
                 log(f"❌ Tally returned error: {response.text}")
-                from tkinter import messagebox
                 messagebox.showerror("Tally Error", f"Tally returned error. Please check Tally and try again.\n\n{response.text}")
                 return None
             if '<ENVELOPE>' not in response.text:
                 log(f"❌ Tally response missing <ENVELOPE>: {response.text}")
-                from tkinter import messagebox
                 messagebox.showerror("Tally Error", f"Tally did not return valid data.\n\n{response.text}")
                 return None
             try:
-                return xmltodict.parse(response.text)
+                cleaned_xml = clean_invalid_xml_chars(response.text)
+                parsed = xmltodict.parse(cleaned_xml)
+                postprocess_vouchers(parsed)
+                return parsed
             except Exception as parse_err:
-                log(f"❌ Failed to parse Tally XML: {parse_err}\nResponse: {response.text}")
-                from tkinter import messagebox
-                messagebox.showerror("Tally Error", f"Failed to parse Tally XML.\n\n{parse_err}\n\n{response.text}")
+                error_sample = response.text[:500]
+                log(f"❌ Failed to parse Tally XML: {parse_err}\nSnippet: {error_sample}")
+                messagebox.showerror("Tally Error", f"Failed to parse Tally XML.\n\n{parse_err}\n\n{error_sample}")
                 return None
         else:
             log(f"❌ Tally responded with status: {response.status_code}")
-            from tkinter import messagebox
             messagebox.showerror("Tally Error", f"Tally responded with status: {response.status_code}")
             return None
     except requests.exceptions.Timeout:
         log("❌ Timeout while connecting to Tally.")
-        from tkinter import messagebox
         messagebox.showerror("Tally Error", "Timeout while connecting to Tally. Please check if Tally is running and accessible.")
         return None
     except Exception as e:
         log(f"❌ Error fetching data from Tally: {e}")
-        from tkinter import messagebox
         messagebox.showerror("Tally Error", f"Error fetching data from Tally: {e}")
         return None
 
 
 def fetch_daybook_data(start_date="20240401", end_date="20250630") -> dict | None:
-    """Fetch Full Transaction Daybook from Tally."""
+    """Fetch Daybook using Custom TDL Report. Make sure your TDL is loaded in Tally and the report name matches exactly."""
     xml_request = f"""
     <ENVELOPE>
         <HEADER>
@@ -115,7 +151,7 @@ def fetch_daybook_data(start_date="20240401", end_date="20250630") -> dict | Non
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>Daybook</REPORTNAME>
+                    <REPORTNAME>Export Data XML</REPORTNAME>
                     <STATICVARIABLES>
                         <SVFROMDATE>{start_date}</SVFROMDATE>
                         <SVTODATE>{end_date}</SVTODATE>
@@ -131,7 +167,7 @@ def fetch_daybook_data(start_date="20240401", end_date="20250630") -> dict | Non
 
 
 def fetch_ledger_details(start_date="20240401", end_date="20250630") -> dict | None:
-    """Fetch Detailed Ledger Information including opening balances."""
+    """Fetch Detailed Ledger Information including opening balances using default report."""
     xml_request = f"""
     <ENVELOPE>
         <HEADER>
@@ -155,8 +191,33 @@ def fetch_ledger_details(start_date="20240401", end_date="20250630") -> dict | N
     return send_tally_request(xml_request)
 
 
+def fetch_export_data(start_date="20240401", end_date="20250630") -> dict | None:
+    """Fetch Daybook and Ledger data using Export.tdl (Export Data XML report)."""
+    xml_request = f"""
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEADER>
+        <BODY>
+            <EXPORTDATA>
+                <REQUESTDESC>
+                    <REPORTNAME>Export Data XML</REPORTNAME>
+                    <STATICVARIABLES>
+                        <SVFROMDATE>{start_date}</SVFROMDATE>
+                        <SVTODATE>{end_date}</SVTODATE>
+                        <EXPLODEFLAG>Yes</EXPLODEFLAG>
+                        <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
+                    </STATICVARIABLES>
+                </REQUESTDESC>
+            </EXPORTDATA>
+        </BODY>
+    </ENVELOPE>
+    """
+    return send_tally_request(xml_request)
+
+
 def fetch_ledger_masters() -> list:
-    """Fetch all ledger masters with opening balances, under category, and amount."""
+    """Fetch all ledger masters with opening balances, under category, and amount using default report."""
     xml_request = """
     <ENVELOPE>
         <HEADER>
@@ -217,7 +278,7 @@ def fetch_ledger_masters() -> list:
 
 
 def get_company_name():
-    """Extract the company name from Tally using the 'Company Info' report."""
+    """Extract the company name from Tally using the 'List of Accounts' report as a fallback."""
     xml_request = """
     <ENVELOPE>
         <HEADER>
@@ -226,8 +287,9 @@ def get_company_name():
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>Company Info</REPORTNAME>
+                    <REPORTNAME>List of Accounts</REPORTNAME>
                     <STATICVARIABLES>
+                        <ACCOUNTTYPE>Ledger</ACCOUNTTYPE>
                         <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
                     </STATICVARIABLES>
                 </REQUESTDESC>
@@ -237,7 +299,14 @@ def get_company_name():
     """
     data = send_tally_request(xml_request)
     try:
-        company = data['ENVELOPE']['BODY']['DATA']['TALLYMESSAGE']['COMPANYINFO']['COMPANY']['@NAME']
+        # Try to extract company name from the envelope header if available
+        company = data['ENVELOPE']['HEADER'].get('COMPANYNAME')
+        if not company:
+            # Fallback: try to extract from the first ledger's company attribute
+            accounts = data.get('ENVELOPE', {}).get('BODY', {}).get('DATA', {}).get('TALLYMESSAGE', [])
+            if isinstance(accounts, list) and accounts:
+                ledger = accounts[0].get('LEDGER', {})
+                company = ledger.get('COMPANY', None)
         log(f"✅ Extracted company name: {company}")
         return company
     except Exception as e:
@@ -266,23 +335,20 @@ def filter_daybook_vouchers(daybook_data):
 
 
 def fetch_tally_data() -> dict | None:
-    """Fetch company name, ledgers, and filtered daybook data from Tally."""
-    log("🔍 Fetching Company Name...")
-    company_name = get_company_name()
-    log("🔍 Fetching Ledger Masters...")
-    ledgers = fetch_ledger_masters()
-    log("🔍 Fetching Daybook Data...")
+    """Fetch only Daybook data from Tally for basic connectivity test."""
+    log("🔍 Fetching Daybook Data Only (Basic Test)...")
     raw_daybook = fetch_daybook_data()
-    filtered_daybook = filter_daybook_vouchers(raw_daybook) if raw_daybook else []
-    if not company_name or not ledgers or not filtered_daybook:
-        log("❌ Failed to fetch some data from Tally.")
+    if not raw_daybook:
+        log("❌ Failed to fetch daybook data from Tally.")
         return None
-    log("✅ Fetched company, ledgers, and daybook successfully.")
-    return {
-        "company": company_name,
-        "ledgers": ledgers,
-        "transactions": filtered_daybook
-    }
+    log("✅ Fetched daybook data successfully.")
+    # Optionally print a summary of the data
+    try:
+        vouchers = raw_daybook.get('ENVELOPE', {}).get('BODY', {}).get('DATA', {}).get('TALLYMESSAGE', [])
+        log(f"Fetched {len(vouchers)} vouchers from daybook.")
+    except Exception as e:
+        log(f"Could not summarize daybook data: {e}")
+    return {"daybook": raw_daybook}
 
 
 

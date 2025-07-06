@@ -2,7 +2,7 @@ import os
 import sys
 import tkinter as tk
 from tkinter import messagebox, ttk
-from tally_connector import test_tally_connection, fetch_tally_data
+from tally_connector import test_tally_connection, fetch_export_data
 from api_connector import send_data_to_backend
 from dotenv import load_dotenv
 import cv2
@@ -171,23 +171,20 @@ def sync_data():
     app.update_idletasks()
     log("Tally connected. Fetching data...")
 
-    all_data = fetch_tally_data()
-    if all_data and all_data.get("daybook") and all_data.get("ledger"):
+    all_data = fetch_export_data()
+    if all_data:
         status_label.config(text="Sending data to backend...", fg="#2e7d32")
         app.update_idletasks()
         log("Data fetched from Tally. Sending to backend...")
-
-        success_daybook = send_data_to_backend(api_key, "daybook", all_data["daybook"])
-        success_ledger = send_data_to_backend(api_key, "ledger", all_data["ledger"])
-
-        if success_daybook and success_ledger:
+        success = send_data_to_backend(api_key, "export", all_data)
+        if success:
             messagebox.showinfo("Success", "Data synced successfully!")
             status_label.config(text="Data synced successfully!", fg="#388e3c")
             log("Data synced to backend successfully.")
         else:
-            messagebox.showerror("Error", "Failed to send some data to backend.")
-            status_label.config(text="Partial sync. Check logs.", fg="#fbc02d")
-            log("Failed to sync some data to backend.")
+            messagebox.showerror("Error", "Failed to send data to backend.")
+            status_label.config(text="Sync failed. Check logs.", fg="#fbc02d")
+            log("Failed to sync data to backend.")
     else:
         messagebox.showerror("Error", "No data fetched from Tally.")
         status_label.config(text="No data fetched.", fg="#d32f2f")

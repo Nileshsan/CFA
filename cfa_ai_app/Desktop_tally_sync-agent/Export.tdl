@@ -1,0 +1,88 @@
+[#Menu: Gateway of Tally]
+    Add: Item: Before: @@LocQuit: Export Data : CALL: ExportDataFunction
+
+[Function: ExportDataFunction]
+    01: EXPORT REPORT: "Export Data XML" : XML : "C:\TallyExports\ExportData.xml"
+
+[Report: Export Data XML]
+    Form: Export Data Form
+
+[Form: Export Data Form]
+    Part: DaybookPart
+    Part: LedgerPart
+
+; =================== DAYBOOK SECTION ===================
+
+[Line: DaybookHeader]
+    Field: DaybookHeaderField
+
+[Field: DaybookHeaderField]
+    Set as: "DATE | VOUCHER TYPE | VOUCHER NO | PARTY | AMOUNT | NARRATION"
+
+[Line: DaybookDataLine]
+    Field: VoucherDate, VoucherType, VoucherNumber, PartyName, VoucherAmount, NarrationFieldExport
+
+[Field: VoucherDate]
+    Set as: $$String@Date
+
+[Field: VoucherType]
+    Set as: $VoucherTypeName
+
+[Field: VoucherNumber]
+    Set as: $VoucherNumber
+
+[Field: PartyName]
+    Set as: $PartyLedgerName
+
+[Field: VoucherAmount]
+    Set as: $$Number:$Amount
+
+[Field: NarrationFieldExport]
+    Set as: ##CleanNarration
+
+[Part: DaybookPart]
+    Line: DaybookHeader
+    Line: DaybookDataLine
+    Repeat: DaybookDataLine : CustomVouchers
+    Scroll: Vertical
+
+[Collection: CustomVouchers]
+    Type: Voucher
+    Fetch: Date, VoucherTypeName, VoucherNumber, PartyLedgerName, Amount, Narration
+    ; Filter: VoucherTypeFilter, DateRangeFilter
+
+; =================== LEDGER SECTION ===================
+
+[Line: LedgerHeader]
+    Field: LedgerHeaderField
+
+[Field: LedgerHeaderField]
+    Set as: "LEDGER NAME | UNDER | OPENING BALANCE"
+
+[Line: LedgerDataLine]
+    Field: LedgerNameExport, LedgerGroup, LedgerOpening
+
+[Field: LedgerNameExport]
+    Set as: $Name
+
+[Field: LedgerGroup]
+    Set as: $Parent
+
+[Field: LedgerOpening]
+    Set as: $$Number:$OpeningBalance
+
+[Part: LedgerPart]
+    Line: LedgerHeader
+    Line: LedgerDataLine
+    Repeat: LedgerDataLine : CustomLedgers
+    Scroll: Vertical
+
+[Collection: CustomLedgers]
+    Type: Ledger
+    Fetch: Name, Parent, OpeningBalance
+
+[System: Formulae]
+    CleanNarration: $$If:$$IsEmpty:$Narration:"-":$$ReplaceAll:($$ReplaceAll:($$ReplaceAll:($$ReplaceAll:($$ReplaceAll:($$ReplaceAll:($$ReplaceAll:$Narration:"&":" "):
+        "<":" "):">":" "):"\"":" "):"'":" "):",":" "):
+        $$NewLine:" "):"\t":""
+. 
