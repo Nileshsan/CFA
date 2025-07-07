@@ -86517,3 +86517,338 @@ Snippet: <ENVELOPE>
  <PARTYNAME>BHS-SONTHOFEN INDIA PRIVATE LIMITED</PARTYNAME>
  <VOUCHERAMOUNT>15659</VOUCHERAMOUNT>
  <NARRATIONFIELDEXPORT><
+[2025-07-07 00:33:04] No data fetched from Tally.
+[2025-07-07 00:33:06] Sync Data button clicked.
+[2025-07-07 00:33:06] Sending test connection POST to http://localhost:9000
+[2025-07-07 00:33:50] ❌ Connection failed: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\util.py", line 38, in reraise
+    raise value.with_traceback(tb)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+urllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\Desktop_tally_sync-agent\tally_connector.py", line 52, in test_tally_connection
+    response = requests.post(TALLY_URL, data=test_request, timeout=150)  # 2 minutes
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 682, in send
+    raise ConnectionError(err, request=request)
+requests.exceptions.ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+
+[2025-07-07 00:33:51] Tally not connected. Sync aborted.
+[2025-07-07 00:38:35] Sync Data button clicked.
+[2025-07-07 00:38:35] Sending test connection POST to http://localhost:9000
+[2025-07-07 00:38:59] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 00:38:59] Tally connected. Fetching data...
+[2025-07-07 00:38:59] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 00:41:00] ❌ Timeout while connecting to Tally.
+[2025-07-07 00:57:26] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 00:57:28] Sync Data button clicked.
+[2025-07-07 00:57:28] Sending test connection POST to http://localhost:9000
+[2025-07-07 00:57:49] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 00:57:49] Tally connected. Fetching data...
+[2025-07-07 00:57:49] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 00:58:15] ❌ Error fetching data from Tally: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[2025-07-07 00:58:18] No data fetched from Tally.
+[2025-07-07 01:25:10] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 01:30:40] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 01:31:15] Sync Data button clicked.
+[2025-07-07 01:31:15] Sending test connection POST to http://localhost:9000
+[2025-07-07 01:31:38] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 01:31:38] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 01:31:58] ❌ Error fetching data from Tally: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[2025-07-07 01:32:00] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 01:32:00] Tally connected. Fetching data...
+[2025-07-07 01:32:00] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 01:32:07] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025A15C45BD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-07-07 01:32:16] No data fetched from Tally.
+[2025-07-07 01:35:20] ✅ API connector session closed
+[2025-07-07 01:35:27] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 01:35:38] Sync Data button clicked.
+[2025-07-07 01:35:38] Sending test connection POST to http://localhost:9000
+[2025-07-07 01:36:07] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 01:36:07] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 01:38:09] ❌ Timeout while connecting to Tally.
+[2025-07-07 01:44:12] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 01:44:13] Tally connected. Fetching data...
+[2025-07-07 01:44:13] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 01:44:20] ✅ API connector session closed
+[2025-07-07 01:44:23] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 01:44:29] Sync Data button clicked.
+[2025-07-07 01:44:29] Sending test connection POST to http://localhost:9000
+[2025-07-07 01:45:38] ❌ Connection failed: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\util.py", line 38, in reraise
+    raise value.with_traceback(tb)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+urllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\Desktop_tally_sync-agent\tally_connector.py", line 54, in test_tally_connection
+    response = requests.post(TALLY_URL, data=test_request, timeout=150)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 682, in send
+    raise ConnectionError(err, request=request)
+requests.exceptions.ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+
+[2025-07-07 11:55:11] Tally not connected. Sync aborted.
+[2025-07-07 11:55:13] Sync Data button clicked.
+[2025-07-07 11:55:13] Sending test connection POST to http://localhost:9000
+[2025-07-07 11:55:38] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 11:55:38] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 11:56:32] ❌ Error fetching data from Tally: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[2025-07-07 17:07:11] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 17:07:11] Tally connected. Fetching data...
+[2025-07-07 17:07:11] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 17:07:16] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000014458B8A780>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-07-07 17:07:20] No data fetched from Tally.
+[2025-07-07 17:08:12] Sync Data button clicked.
+[2025-07-07 17:08:12] Sending test connection POST to http://localhost:9000
+[2025-07-07 17:08:16] ✅ API connector session closed
+[2025-07-07 17:08:19] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 17:08:24] Sync Data button clicked.
+[2025-07-07 17:08:24] Sending test connection POST to http://localhost:9000
+[2025-07-07 17:08:57] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 17:08:57] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 17:09:46] ❌ Error fetching data from Tally: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[2025-07-07 17:09:50] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 17:09:50] Tally connected. Fetching data...
+[2025-07-07 17:09:50] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 17:09:55] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D4B9B55BD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-07-07 17:09:58] No data fetched from Tally.

@@ -1,12 +1,14 @@
 import requests
 import xmltodict
+import json
 import os
 from dotenv import load_dotenv
 import sys
 import datetime
-from tkinter import messagebox  # <-- moved to top, always available
+from tkinter import messagebox
 import re
 import html
+from xml.etree import ElementTree as ET
 
 # Logging setup
 LOG_FILE = os.path.join(os.path.dirname(__file__), 'sync_log.txt')
@@ -26,12 +28,12 @@ else:
 env_path = os.path.join(base_path, 'config.env')
 load_dotenv(dotenv_path=env_path)
 
-TALLY_URL = os.getenv("TALLY_URL")
+TALLY_URL = os.getenv("TALLY_URL", "http://localhost:9000")
 log(f"Loaded TALLY_URL: {TALLY_URL}")
 
 
 def test_tally_connection():
-    """Test if Tally is reachable using a valid XML request (using default Company Info report)."""
+    """Test if Tally is reachable using a simple company info request."""
     test_request = """
     <ENVELOPE>
         <HEADER>
@@ -40,109 +42,127 @@ def test_tally_connection():
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>List of Accounts</REPORTNAME>
+                    <REPORTNAME>Company Information</REPORTNAME>
                 </REQUESTDESC>
             </EXPORTDATA>
         </BODY>
     </ENVELOPE>
     """
     try:
-        log(f"Sending test connection POST to {TALLY_URL}")
-        messagebox.showinfo("Please Wait", "Tally is processing your request.\n\nFor large data or slow devices, this may take up to 2 minutes. Please be patient and do not close Tally or this app.")
-        response = requests.post(TALLY_URL, data=test_request, timeout=150)  # 2 minutes
-        log(f"Test connection response: status={response.status_code}, text={response.text[:200]}")
-        if response.status_code == 200 and "<ENVELOPE>" in response.text:
+        log(f"Testing connection to {TALLY_URL}")
+        response = requests.post(TALLY_URL, data=test_request, timeout=30)
+        log(f"Test response: status={response.status_code}, content_length={len(response.text)}")
+        
+        if response.status_code == 200:
+            # Check for common Tally error patterns
+            if any(err in response.text for err in ['Error', 'error', 'ERROR', 'No company loaded']):
+                log(f"Tally returned error: {response.text[:200]}")
+                return False
             return True
         else:
-            log(f"❌ Invalid response from Tally: {response.text}")
+            log(f"HTTP error: {response.status_code}")
             return False
+    except requests.exceptions.ConnectionError:
+        log("Connection refused - Tally might not be running")
+        return False
+    except requests.exceptions.Timeout:
+        log("Connection timeout")
+        return False
     except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        log(f"❌ Connection failed: {e}\n{error_details}")
-        print(f"❌ Connection failed: {e}\n{error_details}")
+        log(f"Connection test failed: {e}")
         return False
 
 
-def clean_invalid_xml_chars(xml_str):
-    # Remove invalid XML 1.0 characters and decode HTML entities
-    cleaned = re.sub(r'[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]', ' ', xml_str)
-    return html.unescape(cleaned)
-
-
-def clean_narration_for_xml(narration):
-    if not narration or not isinstance(narration, str):
-        return "-"
-    narration = narration.replace("&", " ")
-    narration = narration.replace("<", " ")
-    narration = narration.replace(">", " ")
-    narration = narration.replace("\"", " ")
-    narration = narration.replace("'", " ")
-    narration = narration.replace(",", " ")
-    narration = narration.replace("\n", " ")
-    narration = narration.replace("\t", " ")
-    narration = narration.strip()
-    if not narration:
-        return "-"
-    return narration
-
-
-def postprocess_vouchers(data):
-    """Recursively clean all Narration fields in parsed Tally data."""
-    if isinstance(data, dict):
-        for k, v in data.items():
-            if k.upper() == 'NARRATIONFIELDEXPORT':
-                data[k] = clean_narration_for_xml(v)
-            else:
-                postprocess_vouchers(v)
-    elif isinstance(data, list):
-        for item in data:
-            postprocess_vouchers(item)
-
-
-def send_tally_request(xml_request: str) -> dict | None:
-    """Send XML Request to Tally and return parsed response. Handles Tally errors gracefully."""
+def send_tally_request(xml_request: str, timeout: int = 120) -> str | None:
+    """Send XML Request to Tally and return raw response."""
     try:
-        log(f"Sending data request to {TALLY_URL} with XML: {xml_request[:100]}")
-        messagebox.showinfo("Please Wait", "Tally is processing your request.\n\nFor large data or slow devices, this may take up to 2 minutes. Please be patient and do not close Tally or this app.")
-        response = requests.post(TALLY_URL, data=xml_request, timeout=120)  # 2 minutes
-        log(f"Data request response: status={response.status_code}, text={response.text[:200]}")
+        log(f"Sending request to {TALLY_URL}")
+        log(f"Request XML: {xml_request}")
+        
+        response = requests.post(TALLY_URL, data=xml_request, timeout=timeout)
+        log(f"Response status: {response.status_code}")
+        log(f"Response length: {len(response.text)} chars")
+        
         if response.status_code == 200:
-            # Check for Tally error in response
-            if any(err in response.text for err in ['<LINEERROR>', 'Error in TDL', 'No PARTS', 'No LINES', 'No BUTTONS']):
-                log(f"❌ Tally returned error: {response.text}")
-                messagebox.showerror("Tally Error", f"Tally returned error. Please check Tally and try again.\n\n{response.text}")
-                return None
-            if '<ENVELOPE>' not in response.text:
-                log(f"❌ Tally response missing <ENVELOPE>: {response.text}")
-                messagebox.showerror("Tally Error", f"Tally did not return valid data.\n\n{response.text}")
-                return None
-            try:
-                cleaned_xml = clean_invalid_xml_chars(response.text)
-                parsed = xmltodict.parse(cleaned_xml)
-                postprocess_vouchers(parsed)
-                return parsed
-            except Exception as parse_err:
-                error_sample = response.text[:500]
-                log(f"❌ Failed to parse Tally XML: {parse_err}\nSnippet: {error_sample}")
-                messagebox.showerror("Tally Error", f"Failed to parse Tally XML.\n\n{parse_err}\n\n{error_sample}")
-                return None
+            # Log first 500 characters for debugging
+            log(f"Response preview: {response.text[:500]}")
+            
+            # Check for Tally errors
+            error_patterns = [
+                'Error in TDL',
+                'No such report',
+                'Report not found',
+                'Invalid report name',
+                'No company loaded',
+                'Company not available',
+                'Access denied'
+            ]
+            
+            response_lower = response.text.lower()
+            for pattern in error_patterns:
+                if pattern.lower() in response_lower:
+                    log(f"Tally error detected: {pattern}")
+                    messagebox.showerror("Tally Error", f"Tally returned error: {pattern}")
+                    return None
+            
+            return response.text
         else:
-            log(f"❌ Tally responded with status: {response.status_code}")
-            messagebox.showerror("Tally Error", f"Tally responded with status: {response.status_code}")
+            log(f"HTTP error: {response.status_code}")
             return None
+            
     except requests.exceptions.Timeout:
-        log("❌ Timeout while connecting to Tally.")
-        messagebox.showerror("Tally Error", "Timeout while connecting to Tally. Please check if Tally is running and accessible.")
+        log("Request timeout")
+        messagebox.showerror("Timeout", "Request to Tally timed out. Please try again.")
         return None
     except Exception as e:
-        log(f"❌ Error fetching data from Tally: {e}")
-        messagebox.showerror("Tally Error", f"Error fetching data from Tally: {e}")
+        log(f"Request failed: {e}")
+        messagebox.showerror("Request Error", f"Failed to send request to Tally: {e}")
         return None
 
 
-def fetch_daybook_data(start_date="20240401", end_date="20250630") -> dict | None:
-    """Fetch Daybook using Custom TDL Report. Make sure your TDL is loaded in Tally and the report name matches exactly."""
+def clean_xml_response(xml_str: str) -> str:
+    """Clean and fix XML response from Tally."""
+    if not xml_str:
+        return None
+    
+    # Remove BOM if present
+    if xml_str.startswith('\ufeff'):
+        xml_str = xml_str[1:]
+    
+    # Remove invalid XML characters
+    xml_str = re.sub(r'[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]', '', xml_str)
+    
+    # Decode HTML entities
+    xml_str = html.unescape(xml_str)
+    
+    # Fix common XML issues
+    xml_str = xml_str.replace('&', '&amp;')
+    xml_str = re.sub(r'&amp;(lt|gt|quot|apos|amp);', r'&\1;', xml_str)
+    
+    return xml_str
+
+
+def xml_to_json(xml_str: str) -> str | None:
+    """Convert XML string to JSON."""
+    try:
+        cleaned_xml = clean_xml_response(xml_str)
+        if not cleaned_xml:
+            return None
+        
+        # Parse XML
+        parsed_dict = xmltodict.parse(cleaned_xml)
+        
+        # Convert to JSON
+        json_str = json.dumps(parsed_dict, indent=2, ensure_ascii=False)
+        return json_str
+        
+    except Exception as e:
+        log(f"XML to JSON conversion failed: {e}")
+        return None
+
+
+def fetch_export_data_json(start_date="20240401", end_date="20250630") -> str | None:
+    """Fetch data using the custom Export Data XML report."""
     xml_request = f"""
     <ENVELOPE>
         <HEADER>
@@ -155,19 +175,33 @@ def fetch_daybook_data(start_date="20240401", end_date="20250630") -> dict | Non
                     <STATICVARIABLES>
                         <SVFROMDATE>{start_date}</SVFROMDATE>
                         <SVTODATE>{end_date}</SVTODATE>
-                        <EXPLODEFLAG>Yes</EXPLODEFLAG>
                         <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
+                        <EXPLODEFLAG>Yes</EXPLODEFLAG>
                     </STATICVARIABLES>
                 </REQUESTDESC>
             </EXPORTDATA>
         </BODY>
     </ENVELOPE>
     """
-    return send_tally_request(xml_request)
+    
+    log(f"Fetching export data from {start_date} to {end_date}")
+    raw_response = send_tally_request(xml_request)
+    
+    if raw_response:
+        json_response = xml_to_json(raw_response)
+        if json_response:
+            log("Successfully converted XML to JSON")
+            return json_response
+        else:
+            log("Failed to convert XML to JSON")
+            return None
+    else:
+        log("Failed to get response from Tally")
+        return None
 
 
-def fetch_ledger_details(start_date="20240401", end_date="20250630") -> dict | None:
-    """Fetch Detailed Ledger Information including opening balances using default report."""
+def fetch_daybook_standard(start_date="20240401", end_date="20250630") -> str | None:
+    """Fetch daybook using standard Tally Day Book report."""
     xml_request = f"""
     <ENVELOPE>
         <HEADER>
@@ -176,48 +210,37 @@ def fetch_ledger_details(start_date="20240401", end_date="20250630") -> dict | N
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>Ledger Vouchers</REPORTNAME>
+                    <REPORTNAME>Day Book</REPORTNAME>
                     <STATICVARIABLES>
                         <SVFROMDATE>{start_date}</SVFROMDATE>
                         <SVTODATE>{end_date}</SVTODATE>
-                        <EXPLODEFLAG>Yes</EXPLODEFLAG>
                         <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
+                        <EXPLODEFLAG>Yes</EXPLODEFLAG>
                     </STATICVARIABLES>
                 </REQUESTDESC>
             </EXPORTDATA>
         </BODY>
     </ENVELOPE>
     """
-    return send_tally_request(xml_request)
+    
+    log(f"Fetching daybook from {start_date} to {end_date}")
+    raw_response = send_tally_request(xml_request)
+    
+    if raw_response:
+        json_response = xml_to_json(raw_response)
+        if json_response:
+            log("Successfully fetched daybook data")
+            return json_response
+        else:
+            log("Failed to convert daybook XML to JSON")
+            return None
+    else:
+        log("Failed to get daybook from Tally")
+        return None
 
 
-def fetch_export_data(start_date="20240401", end_date="20250630") -> dict | None:
-    """Fetch Daybook and Ledger data using Export.tdl (Export Data XML report)."""
-    xml_request = f"""
-    <ENVELOPE>
-        <HEADER>
-            <TALLYREQUEST>Export Data</TALLYREQUEST>
-        </HEADER>
-        <BODY>
-            <EXPORTDATA>
-                <REQUESTDESC>
-                    <REPORTNAME>Export Data XML</REPORTNAME>
-                    <STATICVARIABLES>
-                        <SVFROMDATE>{start_date}</SVFROMDATE>
-                        <SVTODATE>{end_date}</SVTODATE>
-                        <EXPLODEFLAG>Yes</EXPLODEFLAG>
-                        <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
-                    </STATICVARIABLES>
-                </REQUESTDESC>
-            </EXPORTDATA>
-        </BODY>
-    </ENVELOPE>
-    """
-    return send_tally_request(xml_request)
-
-
-def fetch_ledger_masters() -> list:
-    """Fetch all ledger masters with opening balances, under category, and amount using default report."""
+def fetch_ledger_list_standard() -> str | None:
+    """Fetch ledger list using standard Tally report."""
     xml_request = """
     <ENVELOPE>
         <HEADER>
@@ -228,57 +251,94 @@ def fetch_ledger_masters() -> list:
                 <REQUESTDESC>
                     <REPORTNAME>List of Accounts</REPORTNAME>
                     <STATICVARIABLES>
-                        <ACCOUNTTYPE>Ledger</ACCOUNTTYPE>
                         <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
+                        <EXPLODEFLAG>Yes</EXPLODEFLAG>
                     </STATICVARIABLES>
                 </REQUESTDESC>
             </EXPORTDATA>
         </BODY>
     </ENVELOPE>
     """
+    
+    log("Fetching ledger list")
+    raw_response = send_tally_request(xml_request)
+    
+    if raw_response:
+        json_response = xml_to_json(raw_response)
+        if json_response:
+            log("Successfully fetched ledger list")
+            return json_response
+        else:
+            log("Failed to convert ledger XML to JSON")
+            return None
+    else:
+        log("Failed to get ledger list from Tally")
+        return None
 
-    raw_data = send_tally_request(xml_request)
 
-    if not raw_data:
-        log("❌ Failed to fetch ledger masters from Tally.")
-        return []
-
+def get_company_name() -> str | None:
+    """Get company name from Tally."""
+    xml_request = """
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEADER>
+        <BODY>
+            <EXPORTDATA>
+                <REQUESTDESC>
+                    <REPORTNAME>Company Information</REPORTNAME>
+                </REQUESTDESC>
+            </EXPORTDATA>
+        </BODY>
+    </ENVELOPE>
+    """
+    
     try:
-        ledgers = []
-        accounts = raw_data.get('ENVELOPE', {}).get('BODY', {}).get('DATA', {}).get('TALLYMESSAGE', [])
-
-        if not isinstance(accounts, list):
-            accounts = [accounts]  # Ensure it's always a list
-
-        for account in accounts:
-            ledger = account.get('LEDGER', {})
-            name = ledger.get('@NAME', '')
-            under = ledger.get('PARENT', '')  # Category/Group
-            opening_balance = ledger.get('OPENINGBALANCE', '0').replace(' Dr', '').replace(' Cr', '').strip()
-
+        response = send_tally_request(xml_request, timeout=30)
+        if response:
+            # Try to extract company name from response
+            if '<COMPANYNAME>' in response:
+                start = response.find('<COMPANYNAME>') + len('<COMPANYNAME>')
+                end = response.find('</COMPANYNAME>')
+                if end > start:
+                    company_name = response[start:end].strip()
+                    log(f"Extracted company name: {company_name}")
+                    return company_name
+            
+            # Alternative method - look for company info in XML
             try:
-                opening_balance_value = float(opening_balance)
-            except ValueError:
-                opening_balance_value = 0
-
-            if opening_balance_value != 0:
-                ledgers.append({
-                    "name": name,
-                    "under": under,
-                    "opening_balance": opening_balance_value,
-                    "amount": opening_balance_value
-                })
-
-        log(f"✅ Extracted {len(ledgers)} ledgers with opening balances, under category, and amount.")
-        return ledgers
-
+                cleaned_xml = clean_xml_response(response)
+                if cleaned_xml:
+                    parsed = xmltodict.parse(cleaned_xml)
+                    # Try different paths to find company name
+                    paths = [
+                        'ENVELOPE.HEADER.COMPANYNAME',
+                        'ENVELOPE.BODY.DATA.COMPANYNAME',
+                        'ENVELOPE.BODY.DATA.TALLYMESSAGE.COMPANYNAME'
+                    ]
+                    
+                    for path in paths:
+                        try:
+                            company_name = parsed
+                            for key in path.split('.'):
+                                company_name = company_name[key]
+                            if company_name:
+                                log(f"Found company name via {path}: {company_name}")
+                                return str(company_name)
+                        except:
+                            continue
+            except:
+                pass
+        
+        log("Could not extract company name")
+        return None
     except Exception as e:
-        log(f"❌ Error parsing ledger masters: {e}")
-        return []
+        log(f"Error getting company name: {e}")
+        return None
 
 
-def get_company_name():
-    """Extract the company name from Tally using the 'List of Accounts' report as a fallback."""
+def test_tdl_report() -> bool:
+    """Test if the custom TDL report is available."""
     xml_request = """
     <ENVELOPE>
         <HEADER>
@@ -287,75 +347,61 @@ def get_company_name():
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>List of Accounts</REPORTNAME>
-                    <STATICVARIABLES>
-                        <ACCOUNTTYPE>Ledger</ACCOUNTTYPE>
-                        <SVEXPORTFORMAT>XML</SVEXPORTFORMAT>
-                    </STATICVARIABLES>
+                    <REPORTNAME>Export Data XML</REPORTNAME>
                 </REQUESTDESC>
             </EXPORTDATA>
         </BODY>
     </ENVELOPE>
     """
-    data = send_tally_request(xml_request)
-    try:
-        # Try to extract company name from the envelope header if available
-        company = data['ENVELOPE']['HEADER'].get('COMPANYNAME')
-        if not company:
-            # Fallback: try to extract from the first ledger's company attribute
-            accounts = data.get('ENVELOPE', {}).get('BODY', {}).get('DATA', {}).get('TALLYMESSAGE', [])
-            if isinstance(accounts, list) and accounts:
-                ledger = accounts[0].get('LEDGER', {})
-                company = ledger.get('COMPANY', None)
-        log(f"✅ Extracted company name: {company}")
-        return company
-    except Exception as e:
-        log(f"❌ Error extracting company name: {e}")
-        return None
+    
+    log("Testing TDL report availability")
+    response = send_tally_request(xml_request, timeout=30)
+    
+    if response and 'TALLYDATAEXPORT' in response:
+        log("TDL report is working")
+        return True
+    else:
+        log("TDL report not available or not working")
+        return False
 
 
-def filter_daybook_vouchers(daybook_data):
-    """Filter daybook transactions to only include Sales, Receipt, Payment, Purchase vouchers."""
-    allowed_types = {"Sales", "Receipt", "Payment", "Purchase"}
-    filtered = []
-    try:
-        vouchers = daybook_data.get('ENVELOPE', {}).get('BODY', {}).get('DATA', {}).get('TALLYMESSAGE', [])
-        if not isinstance(vouchers, list):
-            vouchers = [vouchers]
-        for v in vouchers:
-            voucher = v.get('VOUCHER', {})
-            vtype = voucher.get('@VCHTYPE', '')
-            if vtype in allowed_types:
-                filtered.append(voucher)
-        log(f"✅ Filtered {len(filtered)} vouchers of allowed types from daybook.")
-        return filtered
-    except Exception as e:
-        log(f"❌ Error filtering daybook vouchers: {e}")
-        return []
+# Legacy functions for backward compatibility
+def fetch_daybook_data(start_date="20240401", end_date="20250630"):
+    """Legacy function - use fetch_daybook_standard instead."""
+    return fetch_daybook_standard(start_date, end_date)
 
 
-def fetch_tally_data() -> dict | None:
-    """Fetch only Daybook data from Tally for basic connectivity test."""
-    log("🔍 Fetching Daybook Data Only (Basic Test)...")
-    raw_daybook = fetch_daybook_data()
-    if not raw_daybook:
-        log("❌ Failed to fetch daybook data from Tally.")
-        return None
-    log("✅ Fetched daybook data successfully.")
-    # Optionally print a summary of the data
-    try:
-        vouchers = raw_daybook.get('ENVELOPE', {}).get('BODY', {}).get('DATA', {}).get('TALLYMESSAGE', [])
-        log(f"Fetched {len(vouchers)} vouchers from daybook.")
-    except Exception as e:
-        log(f"Could not summarize daybook data: {e}")
-    return {"daybook": raw_daybook}
+def fetch_ledger_details(start_date="20240401", end_date="20250630"):
+    """Legacy function - use fetch_ledger_list_standard instead."""
+    return fetch_ledger_list_standard()
 
 
+def fetch_export_data(start_date="20240401", end_date="20250630"):
+    """Legacy function - use fetch_export_data_json instead."""
+    return fetch_export_data_json(start_date, end_date)
 
 
-
-
-
+def fetch_tally_data():
+    """Test function to fetch basic data."""
+    log("Testing basic data fetch")
+    
+    # First try custom TDL report
+    if test_tdl_report():
+        log("Using custom TDL report")
+        return fetch_export_data_json()
+    else:
+        log("Using standard reports")
+        daybook = fetch_daybook_standard()
+        ledgers = fetch_ledger_list_standard()
+        
+        if daybook or ledgers:
+            return {
+                "daybook": daybook,
+                "ledgers": ledgers
+            }
+        else:
+            log("Failed to fetch any data")
+            return None
 
 
 
