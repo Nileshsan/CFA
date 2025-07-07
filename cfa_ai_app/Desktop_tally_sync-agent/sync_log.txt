@@ -86852,3 +86852,413 @@ requests.exceptions.ConnectionError: ('Connection aborted.', ConnectionResetErro
         </HEAD
 [2025-07-07 17:09:55] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D4B9B55BD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
 [2025-07-07 17:09:58] No data fetched from Tally.
+[2025-07-07 18:10:01] ✅ API connector session closed
+[2025-07-07 18:10:03] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 18:10:09] Sync Data button clicked.
+[2025-07-07 18:10:09] Testing connection to http://localhost:9000
+[2025-07-07 18:10:09] Test response: status=200, content_length=105
+[2025-07-07 18:10:09] Tally returned error: <RESPONSE>
+ <LINEERROR>Could not find Report &apos;Company Information&apos;!</LINEERROR>
+</RESPONSE>
+
+[2025-07-07 18:10:10] Tally not connected. Sync aborted.
+[2025-07-07 18:10:15] Sync Data button clicked.
+[2025-07-07 18:10:15] Testing connection to http://localhost:9000
+[2025-07-07 18:10:15] Test response: status=200, content_length=105
+[2025-07-07 18:10:15] Tally returned error: <RESPONSE>
+ <LINEERROR>Could not find Report &apos;Company Information&apos;!</LINEERROR>
+</RESPONSE>
+
+[2025-07-07 18:10:18] Tally not connected. Sync aborted.
+[2025-07-07 18:10:28] Sync Data button clicked.
+[2025-07-07 18:10:28] Testing connection to http://localhost:9000
+[2025-07-07 18:10:28] Test response: status=200, content_length=105
+[2025-07-07 18:10:28] Tally returned error: <RESPONSE>
+ <LINEERROR>Could not find Report &apos;Company Information&apos;!</LINEERROR>
+</RESPONSE>
+
+[2025-07-07 18:10:29] Tally not connected. Sync aborted.
+[2025-07-07 18:12:42] Sync Data button clicked.
+[2025-07-07 18:12:43] Testing connection to http://localhost:9000
+[2025-07-07 18:12:43] Test response: status=200, content_length=105
+[2025-07-07 18:12:43] Tally returned error: <RESPONSE>
+ <LINEERROR>Could not find Report &apos;Company Information&apos;!</LINEERROR>
+</RESPONSE>
+
+[2025-07-07 18:12:44] Tally not connected. Sync aborted.
+[2025-07-07 18:12:46] ✅ API connector session closed
+[2025-07-07 18:13:06] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 18:13:09] Sync Data button clicked.
+[2025-07-07 18:13:09] Testing connection to http://localhost:9000
+[2025-07-07 18:13:09] Test response: status=200, content_length=103
+[2025-07-07 18:13:09] Tally returned error: <RESPONSE>
+ <LINEERROR>Could not find Report &apos;List of Companies&apos;!</LINEERROR>
+</RESPONSE>
+
+[2025-07-07 18:13:13] Tally not connected. Sync aborted.
+[2025-07-07 18:13:15] Sync Data button clicked.
+[2025-07-07 18:13:15] Testing connection to http://localhost:9000
+[2025-07-07 18:13:15] Test response: status=200, content_length=103
+[2025-07-07 18:13:15] Tally returned error: <RESPONSE>
+ <LINEERROR>Could not find Report &apos;List of Companies&apos;!</LINEERROR>
+</RESPONSE>
+
+[2025-07-07 18:13:17] Tally not connected. Sync aborted.
+[2025-07-07 18:15:34] ✅ API connector session closed
+[2025-07-07 18:15:36] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 18:15:38] Sync Data button clicked.
+[2025-07-07 18:15:38] Testing connection to http://localhost:9000
+[2025-07-07 18:16:06] Test response: status=200, content_length=80165602
+[2025-07-07 18:16:07] Tally returned error: <ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 18:20:17] Tally not connected. Sync aborted.
+[2025-07-07 18:22:07] ✅ API connector session closed
+[2025-07-07 18:22:08] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 18:22:10] Sync Data button clicked.
+[2025-07-07 18:22:10] Testing connection to http://localhost:9000
+[2025-07-07 18:22:40] Test response: status=200, content_length=80165602
+[2025-07-07 18:22:40] Tally returned error: <ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 18:25:29] Tally not connected. Sync aborted.
+[2025-07-07 18:32:57] Sync Data button clicked.
+[2025-07-07 18:32:57] Testing connection to http://localhost:9000
+[2025-07-07 18:33:20] Test response: status=200, content_length=80168570
+[2025-07-07 18:33:20] Tally returned error: <ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 18:34:08] Tally not connected. Sync aborted.
+[2025-07-07 18:34:10] ✅ API connector session closed
+[2025-07-07 18:34:15] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 18:34:18] Sync Data button clicked.
+[2025-07-07 18:34:18] Testing connection to http://localhost:9000
+[2025-07-07 18:34:18] Test response: status=200, content_length=2725497
+[2025-07-07 18:34:19] Tally returned error: <ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 18:34:21] Tally not connected. Sync aborted.
+[2025-07-07 18:35:06] ✅ API connector session closed
+[2025-07-07 18:35:08] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 18:35:10] Sync Data button clicked.
+[2025-07-07 18:35:10] Sending test connection POST to http://localhost:9000
+[2025-07-07 18:36:33] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 18:36:33] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 18:41:55] ❌ Timeout while connecting to Tally.
+[2025-07-07 18:54:23] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 18:54:23] Tally connected. Fetching data...
+[2025-07-07 18:54:23] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 18:54:29] ✅ API connector session closed
+[2025-07-07 18:54:31] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 18:54:33] Sync Data button clicked.
+[2025-07-07 18:54:33] Sending test connection POST to http://localhost:9000
+[2025-07-07 18:57:15] ❌ Connection failed: HTTPConnectionPool(host='localhost', port=9000): Read timed out. (read timeout=150)
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\util.py", line 39, in reraise
+    raise value
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 536, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 367, in _raise_timeout
+    raise ReadTimeoutError(
+        self, url, f"Read timed out. (read timeout={timeout_value})"
+    ) from err
+urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='localhost', port=9000): Read timed out. (read timeout=150)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\Desktop_tally_sync-agent\tally_connector.py", line 54, in test_tally_connection
+    response = requests.post(TALLY_URL, data=test_request, timeout=150)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 713, in send
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: HTTPConnectionPool(host='localhost', port=9000): Read timed out. (read timeout=150)
+
+[2025-07-07 18:58:38] Tally not connected. Sync aborted.
+[2025-07-07 18:59:57] ✅ API connector session closed
+[2025-07-07 18:59:59] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 19:00:02] Sync Data button clicked.
+[2025-07-07 19:00:02] Sending test connection POST to http://localhost:9000
+[2025-07-07 19:00:24] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 19:00:24] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 19:01:48] ❌ Error fetching data from Tally: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[2025-07-07 19:01:49] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 19:01:49] Tally connected. Fetching data...
+[2025-07-07 19:01:49] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 19:01:54] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000020ADE8A5BD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-07-07 19:01:58] No data fetched from Tally.
+[2025-07-07 19:04:28] Sync Data button clicked.
+[2025-07-07 19:04:28] Sending test connection POST to http://localhost:9000
+[2025-07-07 19:04:52] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 19:04:52] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 19:06:54] ❌ Timeout while connecting to Tally.
+[2025-07-07 19:20:41] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 19:20:41] Tally connected. Fetching data...
+[2025-07-07 19:20:41] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 19:20:46] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000020ADE862570>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-07-07 19:20:52] No data fetched from Tally.
+[2025-07-07 19:27:40] ✅ API connector session closed
+[2025-07-07 19:27:42] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 19:27:44] Sync Data button clicked.
+[2025-07-07 19:27:44] Sending test connection POST to http://localhost:9000
+[2025-07-07 19:28:07] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 19:28:07] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 19:29:11] ❌ Error fetching data from Tally: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[2025-07-07 19:29:20] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 19:29:20] Tally connected. Fetching data...
+[2025-07-07 19:29:20] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 19:29:24] ✅ API connector session closed
+[2025-07-07 20:17:58] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 20:18:01] Sync Data button clicked.
+[2025-07-07 20:18:01] Sending test connection POST to http://localhost:9000
+[2025-07-07 20:18:26] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 20:18:26] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 20:19:58] ❌ Error fetching data from Tally: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[2025-07-07 20:20:06] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 20:20:06] Tally connected. Fetching data...
+[2025-07-07 20:20:06] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 20:20:11] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000226BDA95BD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-07-07 20:20:13] No data fetched from Tally.
+[2025-07-07 20:23:44] ✅ API connector session closed
+[2025-07-07 20:23:45] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 20:23:48] Sync Data button clicked.
+[2025-07-07 20:23:48] Sending test connection POST to http://localhost:9000
+[2025-07-07 20:23:51] Test connection response: status=200, text=<RESPONSE>Unknown Request, cannot be processed</RESPONSE>
+
+[2025-07-07 20:23:51] ❌ Invalid response from Tally: <RESPONSE>Unknown Request, cannot be processed</RESPONSE>
+
+[2025-07-07 20:23:57] Tally not connected. Sync aborted.
+[2025-07-07 20:26:22] ✅ API connector session closed
+[2025-07-07 20:26:24] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 20:26:25] Sync Data button clicked.
+[2025-07-07 20:26:25] Sending test connection POST to http://localhost:9000
+[2025-07-07 20:26:27] Test connection response: status=200, text=<RESPONSE>Unknown Request, cannot be processed</RESPONSE>
+
+[2025-07-07 20:26:27] ❌ Invalid response from Tally: <RESPONSE>Unknown Request, cannot be processed</RESPONSE>
+
+[2025-07-07 20:26:29] Tally not connected. Sync aborted.
+[2025-07-07 20:28:07] ✅ API connector session closed
+[2025-07-07 20:28:09] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 20:28:15] Sync Data button clicked.
+[2025-07-07 20:28:15] Sending test connection POST to http://localhost:9000
+[2025-07-07 20:28:17] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 20:28:17] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 20:30:26] ❌ Timeout while connecting to Tally.
+[2025-07-07 20:30:39] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 20:30:39] Tally connected. Fetching data...
+[2025-07-07 20:30:39] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 20:32:41] ❌ Timeout while connecting to Tally.
+[2025-07-07 20:36:14] No data fetched from Tally.
+[2025-07-07 21:33:18] Sync Data button clicked.
+[2025-07-07 21:33:18] Sending test connection POST to http://localhost:9000
+[2025-07-07 21:33:19] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 21:33:19] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 21:35:31] ❌ Timeout while connecting to Tally.
+[2025-07-07 22:10:19] ❌ Error extracting company name: 'NoneType' object is not subscriptable
+[2025-07-07 22:10:19] Tally connected. Fetching data...
+[2025-07-07 22:10:19] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 22:10:20] Data request response: status=200, text=<RESPONSE>
+ <LINEERROR>Could not find Company &apos;&apos;</LINEERROR>
+</RESPONSE>
+
+[2025-07-07 22:10:20] ❌ Tally returned error: <RESPONSE>
+ <LINEERROR>Could not find Company &apos;&apos;</LINEERROR>
+</RESPONSE>
+
+[2025-07-07 22:10:21] No data fetched from Tally.

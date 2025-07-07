@@ -1,24 +1,27 @@
 [#Menu: Gateway of Tally]
-    Add: Item: Before: @@LocQuit : Export Data : Call : ExportDataFunction
+    Add: Item: Before: @@LocQuit : Export Data XML : Call : ExportDataFunction
 
 [Function: ExportDataFunction]
     01 : Export Report : "Export Data XML"
 
 [Report: Export Data XML]
     Form: Export Data Form
-    Use: Name Object
+    Use: DSP Default
     Variable: SVExportFormat : String : "XML"
     Variable: SVFromDate : Date : $$MonthStart:$$YearStart:$$Today
     Variable: SVToDate : Date : $$Today
     Variable: ExplodeFlag : String : "Yes"
+    Set: SVExportFormat : "XML"
 
 [Form: Export Data Form]
-    Use: Name Object
+    Use: DSP Default
     Part: Export Data Part
     Local: Field: Default: Align: Left
+    Width: 100
+    Height: 100
 
 [Part: Export Data Part]
-    Use: Name Object
+    Use: DSP Default
     Line: XML Header
     Line: Data Header
     Line: Company Section Header
@@ -27,79 +30,79 @@
     Line: Ledger Section Header
     Line: Ledger Data Line
     Line: Ledger Section Footer
-    Line: Voucher Section Header
+    Line: Voucher Section Header  
     Line: Voucher Data Line
     Line: Voucher Section Footer
     Line: Data Footer
     Local: Field: Default: Align: Left
+    Repeat: Export Data Part : Company
 
 [Line: XML Header]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: XML Header Field
 
 [Field: XML Header Field]
-    Use: Name Object
+    Use: Name Field
     Set as: "<?xml version=" + $$QuoteChar + "1.0" + $$QuoteChar + " encoding=" + $$QuoteChar + "UTF-8" + $$QuoteChar + "?>"
 
 [Line: Data Header]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Data Header Field
 
 [Field: Data Header Field]
-    Use: Name Object
-    Set as: "<TALLYDATAEXPORT>"
+    Use: Name Field
+    Set as: "<ENVELOPE>"
 
 [Line: Company Section Header]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Company Section Header Field
 
 [Field: Company Section Header Field]
-    Use: Name Object
+    Use: Name Field
     Set as: "<COMPANYINFO>"
 
 [Line: Company Data Line]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Company Data Field
 
 [Field: Company Data Field]
-    Use: Name Object
+    Use: Name Field
     Set as: "<COMPANYNAME>" + $$FilterXML:$$Company + "</COMPANYNAME>" + $$NewLine +
             "<FINANCIALYEARFROM>" + $$String:$$YearOfDate:$$PeriodFrom + "</FINANCIALYEARFROM>" + $$NewLine +
             "<FINANCIALYEARTO>" + $$String:$$YearOfDate:$$PeriodTo + "</FINANCIALYEARTO>" + $$NewLine +
-            "<EXPORTDATE>" + $$String:$$SysInfo:Date + "</EXPORTDATE>" + $$NewLine +
-            "<EXPORTTIME>" + $$String:$$SysInfo:Time + "</EXPORTTIME>"
+            "<EXPORTDATE>" + $$String:$$Date:$$Today + "</EXPORTDATE>" + $$NewLine +
+            "<EXPORTTIME>" + $$String:$$Time:$$Now + "</EXPORTTIME>"
 
 [Line: Company Section Footer]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Company Section Footer Field
 
 [Field: Company Section Footer Field]
-    Use: Name Object
+    Use: Name Field
     Set as: "</COMPANYINFO>"
 
 [Line: Ledger Section Header]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Ledger Section Header Field
 
 [Field: Ledger Section Header Field]
-    Use: Name Object
+    Use: Name Field
     Set as: "<LEDGERS>"
 
 [Line: Ledger Data Line]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Ledger XML Field
-    Repeat: Ledger Data Line : LedgerCollection
-    Scroll: Vertical
+    Repeat: Ledger XML Field : LedgerCollection
 
 [Field: Ledger XML Field]
-    Use: Name Object
+    Use: Name Field
     Set as: "<LEDGER>" + $$NewLine +
             "<LEDGERNAME>" + $$FilterXML:$Name + "</LEDGERNAME>" + $$NewLine +
             "<LEDGERGROUP>" + $$FilterXML:$Parent + "</LEDGERGROUP>" + $$NewLine +
@@ -107,94 +110,82 @@
             "<LEDGEROPENINGBALANCETYPE>" + $$If:$$IsDebit:$OpeningBalance:"DR":"CR" + "</LEDGEROPENINGBALANCETYPE>" + $$NewLine +
             "<LEDGERCLOSINGBALANCE>" + $$String:$$Number:$$AsAmount:$ClosingBalance + "</LEDGERCLOSINGBALANCE>" + $$NewLine +
             "<LEDGERCLOSINGBALANCETYPE>" + $$If:$$IsDebit:$ClosingBalance:"DR":"CR" + "</LEDGERCLOSINGBALANCETYPE>" + $$NewLine +
-            "<LEDGERTYPE>" + $$FilterXML:$Parent + "</LEDGERTYPE>" + $$NewLine +
             "</LEDGER>"
 
 [Line: Ledger Section Footer]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Ledger Section Footer Field
 
 [Field: Ledger Section Footer Field]
-    Use: Name Object
+    Use: Name Field
     Set as: "</LEDGERS>"
 
 [Line: Voucher Section Header]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Voucher Section Header Field
 
 [Field: Voucher Section Header Field]
-    Use: Name Object
+    Use: Name Field
     Set as: "<VOUCHERS>"
 
 [Line: Voucher Data Line]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Voucher XML Field
-    Repeat: Voucher Data Line : VoucherCollection
-    Scroll: Vertical
+    Repeat: Voucher XML Field : VoucherCollection
 
 [Field: Voucher XML Field]
-    Use: Name Object
+    Use: Name Field
     Set as: "<VOUCHER>" + $$NewLine + 
             "<VOUCHERDATE>" + $$String:$Date + "</VOUCHERDATE>" + $$NewLine +
             "<VOUCHERTYPE>" + $$FilterXML:$VoucherTypeName + "</VOUCHERTYPE>" + $$NewLine +
             "<VOUCHERNUMBER>" + $$FilterXML:$VoucherNumber + "</VOUCHERNUMBER>" + $$NewLine +
-            "<PARTYNAME>" + $$FilterXML:$PartyLedgerName + "</PARTYNAME>" + $$NewLine +
+            "<PARTYNAME>" + $$FilterXML:$$Replace:$$Replace:$PartyLedgerName:$$Char:13:"":$$Char:10:"" + "</PARTYNAME>" + $$NewLine +
             "<VOUCHERAMOUNT>" + $$String:$$Number:$$AsAmount:$Amount + "</VOUCHERAMOUNT>" + $$NewLine +
             "<VOUCHERAMOUNTTYPE>" + $$If:$$IsDebit:$Amount:"DR":"CR" + "</VOUCHERAMOUNTTYPE>" + $$NewLine +
-            "<NARRATIONFIELDEXPORT>" + $$FilterXML:$Narration + "</NARRATIONFIELDEXPORT>" + $$NewLine +
-            "<REFERENCE>" + $$FilterXML:$Reference + "</REFERENCE>" + $$NewLine +
+            "<NARRATION>" + $$FilterXML:$$Replace:$$Replace:$Narration:$$Char:13:"":$$Char:10:"" + "</NARRATION>" + $$NewLine +
+            "<REFERENCE>" + $$FilterXML:$$Replace:$$Replace:$Reference:$$Char:13:"":$$Char:10:"" + "</REFERENCE>" + $$NewLine +
             "</VOUCHER>"
 
 [Line: Voucher Section Footer]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Voucher Section Footer Field
 
 [Field: Voucher Section Footer Field]
-    Use: Name Object
+    Use: Name Field
     Set as: "</VOUCHERS>"
 
 [Line: Data Footer]
-    Use: Name Object
+    Use: DSP Default
     Local: Field: Default: Align: Left
     Field: Data Footer Field
 
 [Field: Data Footer Field]
-    Use: Name Object
-    Set as: "</TALLYDATAEXPORT>"
+    Use: Name Field
+    Set as: "</ENVELOPE>"
 
-[Line: XML Footer]
-    Use: Name Object
-    Local: Field: Default: Align: Left
-    Field: XML Footer Field
-
-[Field: XML Footer Field]
-    Use: Name Object
-    Set as: ""
-
+;; Collections for data extraction
 [Collection: VoucherCollection]
     Type: Voucher
-    Child Of: $$VchTypeContra, $$VchTypePayment, $$VchTypeReceipt, $$VchTypeSales, $$VchTypePurchase, $$VchTypeJournal
+    Child Of: $$VchTypeSales, $$VchTypePurchase, $$VchTypeReceipt, $$VchTypePayment
     Belongs To: Yes
     Fetch: Date, VoucherTypeName, VoucherNumber, PartyLedgerName, Amount, Narration, Reference
-    Walk: Inventory Entries
     Filter: $$IsSuch:$Date:$$SVFromDate:$$SVToDate
-    Sort: $Date, $VoucherNumber
 
 [Collection: LedgerCollection]
     Type: Ledger
-    Child Of: $$GroupSundryDebtors, $$GroupSundryCreditors, $$GroupCashInHand, $$GroupBankAccounts, $$GroupSalesAccounts, $$GroupPurchaseAccounts, $$GroupCurrentAssets, $$GroupCurrentLiabilities, $$GroupFixedAssets, $$GroupLoansLiability, $$GroupCapitalAccount, $$GroupReservesSurplus, $$GroupExpensesIndirect, $$GroupExpensesDirect, $$GroupIncomeIndirect, $$GroupIncomeDirect
+    Child Of: $$GroupSundryDebtors, $$GroupSundryCreditors, $$GroupCashInHand, $$GroupBankAccounts
     Belongs To: Yes
     Fetch: Name, Parent, OpeningBalance, ClosingBalance
     Filter: NOT $$IsEmpty:$Name
-    Sort: $Name
 
+;; System Functions
 [System: Formula]
-    ; Use Tally's built-in FilterXML instead of custom functions
-    ; This ensures proper XML encoding
     FilterXML: $$FilterXML:%%FilterXML
 
-    
+
+
+
