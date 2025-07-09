@@ -87262,3 +87262,488 @@ requests.exceptions.ReadTimeout: HTTPConnectionPool(host='localhost', port=9000)
 </RESPONSE>
 
 [2025-07-07 22:10:21] No data fetched from Tally.
+[2025-07-07 22:47:59] ✅ API connector session closed
+[2025-07-07 22:49:35] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 22:49:38] Sync Data button clicked.
+[2025-07-07 22:49:38] Sending test connection POST to http://localhost:9000
+[2025-07-07 22:49:43] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 22:49:43] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 22:51:48] ❌ Timeout while connecting to Tally.
+[2025-07-07 22:55:38] Tally connected. Fetching data...
+[2025-07-07 22:55:38] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 22:55:43] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000119FFB95E50>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-07-07 22:55:56] ✅ API connector session closed
+[2025-07-07 22:55:57] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 22:56:31] ✅ API connector session closed
+[2025-07-07 22:56:33] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 22:57:21] ✅ API connector session closed
+[2025-07-07 22:57:27] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 22:57:34] Sync Data button clicked.
+[2025-07-07 22:57:34] Sending test connection POST to http://localhost:9000
+[2025-07-07 22:57:40] ❌ Connection failed: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000261FFED23C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 198, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 493, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 494, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 325, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 213, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x00000261FFED23C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000261FFED23C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\Desktop_tally_sync-agent\tally_connector.py", line 59, in test_tally_connection
+    response = requests.post(TALLY_URL, data=test_request, timeout=150)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000261FFED23C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+
+[2025-07-07 22:57:49] Tally not connected. Sync aborted.
+[2025-07-07 23:03:57] ✅ API connector session closed
+[2025-07-07 23:03:59] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 23:04:02] Sync Data button clicked.
+[2025-07-07 23:04:02] Sending test connection POST to http://localhost:9000
+[2025-07-07 23:04:04] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 23:04:04] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 23:05:32] ❌ Error fetching data from Tally: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[2025-07-07 23:05:39] Tally connected. Fetching data...
+[2025-07-07 23:05:39] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 23:05:41] Data request response: status=200, text=<RESPONSE>
+ <LINEERROR>Could not find Company &apos;&apos;</LINEERROR>
+</RESPONSE>
+
+[2025-07-07 23:05:41] ❌ Tally returned error: <RESPONSE>
+ <LINEERROR>Could not find Company &apos;&apos;</LINEERROR>
+</RESPONSE>
+
+[2025-07-07 23:05:59] No data fetched from Tally.
+[2025-07-07 23:50:22] Sync Data button clicked.
+[2025-07-07 23:50:22] Sending test connection POST to http://localhost:9000
+[2025-07-07 23:50:27] ❌ Connection failed: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\util.py", line 38, in reraise
+    raise value.with_traceback(tb)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+urllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\Desktop_tally_sync-agent\tally_connector.py", line 59, in test_tally_connection
+    messagebox.showinfo("Please Wait", "Tally is processing your request.\n\nFor large data or slow devices, this may take up to 2 minutes. Please be patient and do not close Tally or this app.")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 682, in send
+    raise ConnectionError(err, request=request)
+requests.exceptions.ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+
+[2025-07-07 23:50:28] Tally not connected. Sync aborted.
+[2025-07-07 23:50:33] ✅ API connector session closed
+[2025-07-07 23:50:36] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 23:51:55] ✅ API connector session closed
+[2025-07-07 23:51:58] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 23:52:00] Sync Data button clicked.
+[2025-07-07 23:52:00] Sending test connection POST to http://localhost:9000
+[2025-07-07 23:52:03] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 23:52:03] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 23:52:26] ❌ Error fetching data from Tally: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[2025-07-07 23:52:27] Tally connected. Fetching data...
+[2025-07-07 23:52:27] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-07 23:52:32] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D3A6335E50>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-07-07 23:52:34] No data fetched from Tally.
+[2025-07-07 23:55:08] Sync Data button clicked.
+[2025-07-07 23:55:08] Sending test connection POST to http://localhost:9000
+[2025-07-07 23:55:13] ❌ Connection failed: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D3A6330E90>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 198, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 493, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 494, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 325, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connection.py", line 213, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x000001D3A6330E90>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\urllib3\util\retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D3A6330E90>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\Desktop_tally_sync-agent\tally_connector.py", line 60, in test_tally_connection
+    response = requests.post(TALLY_URL, data=test_request, timeout=150)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\Admin\Nilesh_Projects\CFA\cfa_ai_app\backend\venv\Lib\site-packages\requests\adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D3A6330E90>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+
+[2025-07-07 23:55:15] Tally not connected. Sync aborted.
+[2025-07-07 23:55:26] ✅ API connector session closed
+[2025-07-07 23:58:37] Loaded TALLY_URL: http://localhost:9000
+[2025-07-07 23:58:41] Sync Data button clicked.
+[2025-07-07 23:58:41] Sending test connection POST to http://localhost:9000
+[2025-07-07 23:58:44] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-07 23:58:44] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-08 00:00:45] ❌ Timeout while connecting to Tally.
+[2025-07-08 00:04:02] Tally connected. Fetching data...
+[2025-07-08 00:04:02] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-08 00:04:02] Data request response: status=200, text=<RESPONSE>
+ <LINEERROR>Could not find Report &apos;Export Data XML&apos;!</LINEERROR>
+</RESPONSE>
+
+[2025-07-08 00:04:02] ❌ Tally returned error: <RESPONSE>
+ <LINEERROR>Could not find Report &apos;Export Data XML&apos;!</LINEERROR>
+</RESPONSE>
+
+[2025-07-08 00:04:03] No data fetched from Tally.
+[2025-07-08 00:04:17] ✅ API connector session closed
+[2025-07-08 00:04:18] Loaded TALLY_URL: http://localhost:9000
+[2025-07-08 00:04:20] Sync Data button clicked.
+[2025-07-08 00:04:20] Sending test connection POST to http://localhost:9000
+[2025-07-08 00:04:22] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-08 00:04:22] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-08 00:04:29] ❌ Error fetching data from Tally: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[2025-07-08 00:04:31] Tally connected. Fetching data...
+[2025-07-08 00:04:31] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-08 00:04:36] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001BF886C5E50>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-07-08 00:04:38] No data fetched from Tally.
+[2025-07-09 15:00:19] Sync Data button clicked.
+[2025-07-09 15:00:19] Sending test connection POST to http://localhost:9000
+[2025-07-09 15:00:44] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-09 15:00:44] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-09 15:02:48] ❌ Timeout while connecting to Tally.
+[2025-07-09 15:27:21] Tally connected. Fetching data...
+[2025-07-09 15:27:21] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-09 15:27:25] ❌ Error fetching data from Tally: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001BF886960F0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-07-09 15:27:28] No data fetched from Tally.
+[2025-07-09 15:28:35] ✅ API connector session closed
+[2025-07-09 15:28:42] Loaded TALLY_URL: http://localhost:9000
+[2025-07-09 15:28:49] Sync Data button clicked.
+[2025-07-09 15:28:49] Sending test connection POST to http://localhost:9000
+[2025-07-09 15:28:51] Test connection response: status=200, text=<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>All Masters</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRE
+[2025-07-09 15:28:51] Sending data request to http://localhost:9000 with XML: 
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEAD
+[2025-07-09 15:30:53] ❌ Timeout while connecting to Tally.

@@ -32,6 +32,7 @@ load_dotenv(dotenv_path=env_path)
 TALLY_URL = os.getenv("TALLY_URL")
 log(f"Loaded TALLY_URL: {TALLY_URL}")
 
+COMPANY_NAME = "Fluidtecq Pneumatics Private Limited (2022-23)"
 
 def test_tally_connection():
     """Test if Tally is reachable using a valid XML request (using default Company Info report)."""
@@ -300,6 +301,7 @@ def fetch_daybook_data(start_date="20240401", end_date="20250630") -> dict | Non
                 <REQUESTDESC>
                     <REPORTNAME>Export Data XML</REPORTNAME>
                     <STATICVARIABLES>
+                        <SVCURRENTCOMPANY>{COMPANY_NAME}</SVCURRENTCOMPANY>
                         <SVFROMDATE>{start_date}</SVFROMDATE>
                         <SVTODATE>{end_date}</SVTODATE>
                         <EXPLODEFLAG>Yes</EXPLODEFLAG>
@@ -325,6 +327,7 @@ def fetch_ledger_details(start_date="20240401", end_date="20250630") -> dict | N
                 <REQUESTDESC>
                     <REPORTNAME>Ledger Vouchers</REPORTNAME>
                     <STATICVARIABLES>
+                        <SVCURRENTCOMPANY>{COMPANY_NAME}</SVCURRENTCOMPANY>
                         <SVFROMDATE>{start_date}</SVFROMDATE>
                         <SVTODATE>{end_date}</SVTODATE>
                         <EXPLODEFLAG>Yes</EXPLODEFLAG>
@@ -350,6 +353,7 @@ def fetch_export_data(start_date="20240401", end_date="20250630") -> dict | None
                 <REQUESTDESC>
                     <REPORTNAME>Export Data XML</REPORTNAME>
                     <STATICVARIABLES>
+                        <SVCURRENTCOMPANY>{COMPANY_NAME}</SVCURRENTCOMPANY>
                         <SVFROMDATE>{start_date}</SVFROMDATE>
                         <SVTODATE>{end_date}</SVTODATE>
                         <EXPLODEFLAG>Yes</EXPLODEFLAG>
@@ -375,6 +379,7 @@ def fetch_export_data_json(start_date="20240401", end_date="20250630") -> dict |
                 <REQUESTDESC>
                     <REPORTNAME>Export Data XML</REPORTNAME>
                     <STATICVARIABLES>
+                        <SVCURRENTCOMPANY>{COMPANY_NAME}</SVCURRENTCOMPANY>
                         <SVFROMDATE>{start_date}</SVFROMDATE>
                         <SVTODATE>{end_date}</SVTODATE>
                         <EXPLODEFLAG>Yes</EXPLODEFLAG>
