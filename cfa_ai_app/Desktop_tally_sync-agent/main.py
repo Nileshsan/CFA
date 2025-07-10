@@ -20,7 +20,7 @@ def resource_path(relative_path):
 
 # DLL path fix for PyInstaller
 if getattr(sys, 'frozen', False):
-    base_path = sys._MEIPASS
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath('.'))
 else:
     base_path = os.path.abspath(".")
 
