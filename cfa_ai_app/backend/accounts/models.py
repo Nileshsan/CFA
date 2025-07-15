@@ -9,6 +9,44 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
+class TallyTransaction(models.Model):
+    REGISTER_CHOICES = [
+        ('sales', 'Sales'),
+        ('purchase', 'Purchase'),
+        ('payment', 'Payment'),
+        ('receipt', 'Receipt'),
+        ('journal', 'Journal'),
+        ('credit_note', 'Credit Note'),
+        ('debit_note', 'Debit Note'),
+    ]
+    
+    # Tally data fields
+    voucher_no = models.CharField(max_length=100)
+    date = models.DateField()
+    party_name = models.CharField(max_length=255)  # Client name from Tally
+    narration = models.TextField(blank=True)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    register_type = models.CharField(max_length=20, choices=REGISTER_CHOICES)
+    
+    # Grouping fields
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='transactions', null=True, blank=True)
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date', '-created_at']
+        indexes = [
+            models.Index(fields=['party_name']),
+            models.Index(fields=['register_type']),
+            models.Index(fields=['date']),
+            models.Index(fields=['client']),
+        ]
+    
+    def __str__(self):
+        return f"{self.party_name} - {self.voucher_no} ({self.register_type})"
+
 class UserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
         if not email:
@@ -33,8 +71,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=150, unique=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='users', null=True, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='employee')
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)  # type: ignore
+    is_staff = models.BooleanField(default=False)  # type: ignore
     date_joined = models.DateTimeField(auto_now_add=True)
 
     objects = UserManager()

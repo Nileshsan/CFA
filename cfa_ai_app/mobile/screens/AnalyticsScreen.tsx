@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Chart } from '../../components/Chart';
+import { Chart } from '../components/Chart';
 
 const { width } = Dimensions.get('window');
 
@@ -365,4 +365,4 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 20,
   },
-});
+}); 

@@ -15,6 +15,24 @@ import urllib3
 from urllib3.exceptions import InsecureRequestWarning
 urllib3.disable_warnings(InsecureRequestWarning)
 
+try:
+    from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+except ImportError:
+    from tkinter import Tk, messagebox
+    root = Tk()
+    root.withdraw()
+    messagebox.showerror(
+        "Missing Dependency",
+        "The required package 'tenacity' is not installed.\n"
+        "Please install it using 'pip install tenacity' and restart the application."
+    )
+    raise
+
+import re
+import html
+from dateutil import parser, rrule
+from datetime import timedelta
+
 def print_log(msg, level="INFO"):
     """Terminal log printing for CLI feedback"""
     prefix = {
@@ -53,7 +71,7 @@ log(f"Loaded TALLY_URL: {TALLY_URL}")
 MAX_RETRIES = 3
 RETRY_DELAY = 2
 CONNECTION_TIMEOUT = 15
-READ_TIMEOUT = 60
+READ_TIMEOUT = 120
 
 def check_tally_service():
     """Check if Tally service is running on the specified port."""
@@ -93,7 +111,6 @@ def test_tally_connection():
     if not check_tally_service():
         return False
     
-    # Simple test request to get company info
     test_request = """
     <ENVELOPE>
         <HEADER>
@@ -102,13 +119,10 @@ def test_tally_connection():
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>List of Accounts</REPORTNAME>
-                    <STATICVARIABLES>
-                        <ACCOUNTTYPE>Ledger</ACCOUNTTYPE>
-                    </STATICVARIABLES>
+                    <REPORTNAME>Ledger</REPORTNAME>
                 </REQUESTDESC>
             </EXPORTDATA>
-        </BODY>
+        </BODY> 
     </ENVELOPE>
     """
     
@@ -128,7 +142,6 @@ def test_tally_connection():
         log(f"Test response: status={response.status_code}, length={len(response.text)}")
         
         if response.status_code == 200 and response.text.strip():
-            # Check for valid Tally response patterns
             if any(pattern in response.text for pattern in ['<ENVELOPE>', '<TALLYMESSAGE>', '<COMPANY>', '<NAME>']):
                 log("✅ Tally connection test successful")
                 return True
@@ -155,95 +168,70 @@ def test_tally_connection():
             pass
 
 def clean_xml_data(xml_str):
-    """Clean and fix XML data from Tally."""
+    """Clean and fix XML data for proper parsing."""
     if not xml_str:
         return ""
     
     # Remove invalid XML characters
     cleaned = re.sub(r'[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\U00010000-\U0010FFFF]', '', xml_str)
     
-    # Decode HTML entities
+    # Unescape HTML entities
     cleaned = html.unescape(cleaned)
     
-    # Ensure proper XML declaration
+    # Fix ampersands that are not part of entities
+    cleaned = re.sub(r'&(?!amp;|lt;|gt;|apos;|quot;)', '&amp;', cleaned)
+    
+    # Remove control characters
+    cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F]', '', cleaned)
+    
+    # Ensure XML declaration exists
     if not cleaned.strip().startswith('<?xml'):
         cleaned = '<?xml version="1.0" encoding="UTF-8"?>\n' + cleaned
     
     return cleaned
 
-def send_tally_request(xml_request, return_json=False, max_retries=MAX_RETRIES):
-    """Send XML request to Tally with retry logic."""
-    if not TALLY_URL:
-        log("❌ TALLY_URL is not set")
-        return None
+@retry(
+    stop=stop_after_attempt(MAX_RETRIES),
+    wait=wait_exponential(multiplier=1, min=RETRY_DELAY, max=10),
+    retry=retry_if_exception_type((requests.exceptions.ConnectionError, requests.exceptions.Timeout))
+)
+def send_tally_request(xml_request):
+    """Send XML request to Tally and return parsed response."""
+    url = os.getenv("TALLY_URL", "http://localhost:9000")
+    headers = {'Content-Type': 'application/xml'}
     
-    if not check_tally_service():
-        log("❌ Tally service is not available")
-        return None
-    
-    last_error = None
-    session = create_session()
-    
-    for attempt in range(max_retries):
-        try:
-            if attempt > 0:
-                log(f"Retry attempt {attempt + 1}/{max_retries}")
-                time.sleep(RETRY_DELAY * attempt)
+    try:
+        response = requests.post(
+            url, 
+            data=xml_request.encode('utf-8'), 
+            headers=headers, 
+            timeout=(CONNECTION_TIMEOUT, READ_TIMEOUT)
+        )
+        
+        if response.status_code == 200:
+            # Save raw response for debugging
+            with open("raw_tally_response.xml", "w", encoding="utf-8") as f:
+                f.write(response.text)
             
-            response = session.post(
-                TALLY_URL,
-                data=xml_request.encode('utf-8'),
-                timeout=(CONNECTION_TIMEOUT, READ_TIMEOUT)
-            )
+            # Clean and parse XML
+            cleaned_xml = clean_xml_data(response.text)
+            try:
+                return xmltodict.parse(cleaned_xml)
+            except Exception as e:
+                log(f"❌ XML Parse error: {e}")
+                log(f"Raw response: {response.text[:500]}...")
+                return None
+        else:
+            log(f"❌ HTTP error: {response.status_code}")
+            log(f"Response: {response.text[:200]}...")
+            return None
             
-            if response.status_code == 200 and response.text.strip():
-                # Check for Tally error patterns
-                error_patterns = [
-                    '<LINEERROR>', 'Error in TDL', 'Invalid Report', 
-                    'Report not found', 'TDL Error', 'No such report'
-                ]
-                
-                if any(err in response.text for err in error_patterns):
-                    log(f"❌ Tally returned error: {response.text[:300]}...")
-                    return None
-                
-                # Clean and parse the response
-                cleaned_xml = clean_xml_data(response.text)
-                
-                try:
-                    if return_json:
-                        parsed_dict = xmltodict.parse(cleaned_xml)
-                        return json.dumps(parsed_dict, indent=2, ensure_ascii=False)
-                    else:
-                        return xmltodict.parse(cleaned_xml)
-                except Exception as parse_err:
-                    log(f"❌ Parse error: {parse_err}")
-                    last_error = parse_err
-                    continue
-            else:
-                log(f"❌ HTTP error: {response.status_code}")
-                last_error = f"HTTP {response.status_code}"
-                continue
-                
-        except requests.exceptions.Timeout:
-            log(f"❌ Timeout on attempt {attempt + 1}")
-            last_error = "Timeout"
-            continue
-        except requests.exceptions.ConnectionError as e:
-            log(f"❌ Connection error: {e}")
-            last_error = f"Connection error: {e}"
-            continue
-        except Exception as e:
-            log(f"❌ Unexpected error: {e}")
-            last_error = f"Unexpected error: {e}"
-            continue
-    
-    session.close()
-    log(f"❌ All {max_retries} attempts failed. Last error: {last_error}")
-    return None
+    except Exception as e:
+        log(f"❌ Request error: {e}")
+        raise
 
 def get_company_name():
-    """Get the current company name from Tally."""
+    """Get the company name from Tally."""
     xml_request = """
     <ENVELOPE>
         <HEADER>
@@ -252,10 +240,7 @@ def get_company_name():
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>List of Accounts</REPORTNAME>
-                    <STATICVARIABLES>
-                        <ACCOUNTTYPE>Company</ACCOUNTTYPE>
-                    </STATICVARIABLES>
+                    <REPORTNAME>list of companies</REPORTNAME>
                 </REQUESTDESC>
             </EXPORTDATA>
         </BODY>
@@ -266,63 +251,63 @@ def get_company_name():
     if not data:
         return None
     
-    try:
-        # Try different paths to find company name
-        paths_to_try = [
-            ['ENVELOPE', 'BODY', 'DATA', 'TALLYMESSAGE', 'COMPANY', '@NAME'],
-            ['ENVELOPE', 'BODY', 'DATA', 'TALLYMESSAGE', 'COMPANY', 'NAME'],
-            ['ENVELOPE', 'BODY', 'DATA', 'COMPANY', '@NAME'],
-            ['ENVELOPE', 'BODY', 'DATA', 'COMPANY', 'NAME'],
-            ['ENVELOPE', 'COMPANY', '@NAME'],
-            ['ENVELOPE', 'COMPANY', 'NAME'],
-            ['COMPANY', '@NAME'],
-            ['COMPANY', 'NAME']
-        ]
-        
-        for path in paths_to_try:
-            try:
-                current = data
-                for key in path:
-                    if isinstance(current, dict) and key in current:
-                        current = current[key]
-                    else:
-                        break
-                else:
-                    if isinstance(current, str) and current.strip():
-                        return current.strip()
-            except:
-                continue
-        
-        # Fallback: search recursively
-        def find_company_name(obj):
-            if isinstance(obj, dict):
-                for key, value in obj.items():
-                    if 'COMPANY' in key.upper() or 'NAME' in key.upper():
-                        if isinstance(value, str) and value.strip():
-                            return value.strip()
-                        elif isinstance(value, dict):
-                            result = find_company_name(value)
-                            if result:
-                                return result
-                    else:
-                        result = find_company_name(value)
-                        if result:
-                            return result
-            elif isinstance(obj, list):
-                for item in obj:
-                    result = find_company_name(item)
-                    if result:
-                        return result
-            return None
-        
-        return find_company_name(data)
-        
-    except Exception as e:
-        log(f"❌ Error extracting company name: {e}")
+    def find_company_name(obj):
+        if isinstance(obj, dict):
+            # Look for COMPANY > NAME structure
+            if "COMPANY" in obj:
+                company = obj["COMPANY"]
+                if isinstance(company, dict) and "NAME" in company:
+                    name = company["NAME"]
+                    if isinstance(name, str) and name.strip():
+                        return name.strip()
+                elif isinstance(company, list):
+                    for comp in company:
+                        if isinstance(comp, dict) and "NAME" in comp:
+                            name = comp["NAME"]
+                            if isinstance(name, str) and name.strip():
+                                return name.strip()
+            
+            # Recursively search
+            for key, value in obj.items():
+                result = find_company_name(value)
+                if result:
+                    return result
+        elif isinstance(obj, list):
+            for item in obj:
+                result = find_company_name(item)
+                if result:
+                    return result
         return None
+    
+    return find_company_name(data)
 
-def fetch_vouchers(start_date="20240401", end_date="20250630"):
-    """Fetch vouchers using Day Book report."""
+def extract_vouchers_from_response(response_data):
+    """Extract vouchers from any nested structure in Tally response."""
+    vouchers = []
+    
+    def traverse_and_extract(obj):
+        if isinstance(obj, dict):
+            # Check if this object contains vouchers
+            if 'VOUCHER' in obj:
+                voucher_data = obj['VOUCHER']
+                if isinstance(voucher_data, list):
+                    vouchers.extend(voucher_data)
+                else:
+                    vouchers.append(voucher_data)
+            
+            # Recursively check all values
+            for key, value in obj.items():
+                if isinstance(value, (dict, list)):
+                    traverse_and_extract(value)
+        elif isinstance(obj, list):
+            for item in obj:
+                traverse_and_extract(item)
+    
+    traverse_and_extract(response_data)
+    return vouchers
+
+def fetch_all_vouchers_by_daybook(start_date, end_date):
+    """Fetch ALL vouchers using Day Book method - most reliable for getting complete data."""
     xml_request = f"""
     <ENVELOPE>
         <HEADER>
@@ -343,11 +328,120 @@ def fetch_vouchers(start_date="20240401", end_date="20250630"):
     </ENVELOPE>
     """
     
-    log(f"Fetching vouchers from {start_date} to {end_date}")
-    return send_tally_request(xml_request)
+    log(f"Fetching all vouchers from Day Book: {start_date} to {end_date}")
+    result = send_tally_request(xml_request)
+    
+    if not result:
+        log("❌ No response from Tally Day Book")
+        return []
+    
+    # Extract all vouchers from the response
+    all_vouchers = extract_vouchers_from_response(result)
+    
+    # Log voucher types found
+    voucher_types = {}
+    for voucher in all_vouchers:
+        if isinstance(voucher, dict):
+            vtype = voucher.get('VOUCHERTYPENAME', 'Unknown').strip()
+            voucher_types[vtype] = voucher_types.get(vtype, 0) + 1
+    
+    log(f"✅ Day Book extracted {len(all_vouchers)} vouchers")
+    log(f"Voucher types found: {voucher_types}")
+    
+    return all_vouchers
 
-def fetch_ledgers():
-    """Fetch ledger master data."""
+def fetch_vouchers_by_type(report_name, start_date, end_date):
+    """
+    Fetch vouchers of a specific type using the correct Tally report name (e.g., 'Sales Vouchers').
+    Returns a list of voucher dicts.
+    """
+    xml_request = f"""
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEADER>
+        <BODY>
+            <EXPORTDATA>
+                <REQUESTDESC>
+                    <REPORTNAME>{report_name}</REPORTNAME>
+                    <STATICVARIABLES>
+                        <SVFROMDATE>{start_date}</SVFROMDATE>
+                        <SVTODATE>{end_date}</SVTODATE>
+                        <EXPLODEFLAG>Yes</EXPLODEFLAG>
+                    </STATICVARIABLES>
+                </REQUESTDESC>
+            </EXPORTDATA>
+        </BODY>
+    </ENVELOPE>
+    """
+    log(f"Fetching vouchers from report '{report_name}' for {start_date} to {end_date}")
+    result = send_tally_request(xml_request)
+    if not result:
+        log(f"❌ No response from Tally for {report_name}")
+        return []
+    vouchers = extract_vouchers_from_response(result)
+    log(f"✅ Extracted {len(vouchers)} vouchers from {report_name}")
+    return vouchers
+
+def fetch_vouchers_by_type_chunked(report_name, start_date, end_date, chunk_days=30):
+    """
+    Fetch vouchers of a specific type in chunks to avoid Tally timeouts.
+    Returns a list of voucher dicts.
+    """
+    start = parser.parse(start_date)
+    end = parser.parse(end_date)
+    all_vouchers = []
+    chunk_count = 0
+    while start <= end:
+        chunk_start = start
+        chunk_end = min(start + timedelta(days=chunk_days-1), end)
+        chunk_start_str = chunk_start.strftime('%Y%m%d')
+        chunk_end_str = chunk_end.strftime('%Y%m%d')
+        log(f"Fetching {report_name} chunk: {chunk_start_str} to {chunk_end_str}")
+        vouchers = fetch_vouchers_by_type(report_name, chunk_start_str, chunk_end_str)
+        all_vouchers.extend(vouchers)
+        log(f"Chunk {chunk_start_str}-{chunk_end_str}: {len(vouchers)} vouchers")
+        start = chunk_end + timedelta(days=1)
+        chunk_count += 1
+    log(f"✅ Total {report_name} vouchers fetched in chunks: {len(all_vouchers)}")
+    return all_vouchers
+
+def fetch_all_7_voucher_types(start_date, end_date, chunk_days=30):
+    """
+    Fetch all 7 accounting voucher types using the correct report names, in chunks.
+    Returns a list of all vouchers (dicts) for the date range.
+    """
+    report_map = [
+        ("Sales Vouchers", "Sales"),
+        ("Purchase Vouchers", "Purchase"),
+        ("Payment Vouchers", "Payment"),
+        ("Receipt Vouchers", "Receipt"),
+        ("Journal Vouchers", "Journal"),
+        ("Credit Note Vouchers", "Credit Note"),
+        ("Debit Note Vouchers", "Debit Note"),
+    ]
+    all_vouchers = []
+    type_counts = {}
+    for report_name, vtype in report_map:
+        vouchers = fetch_vouchers_by_type_chunked(report_name, start_date, end_date, chunk_days=chunk_days)
+        for voucher in vouchers:
+            if isinstance(voucher, dict):
+                voucher_type = voucher.get('VOUCHERTYPENAME', '').strip()
+                type_counts[voucher_type] = type_counts.get(voucher_type, 0) + 1
+                all_vouchers.append(voucher)
+        log(f"{report_name}: {len(vouchers)} vouchers fetched.")
+    log(f"✅ Total vouchers extracted: {len(all_vouchers)} by type: {type_counts}")
+    return all_vouchers
+
+def fetch_accounting_vouchers_only(start_date, end_date, chunk_days=30):
+    """
+    Fetch only the 7 accounting voucher types using the correct report names, in chunks.
+    Returns a list of voucher dicts.
+    """
+    return fetch_all_7_voucher_types(start_date, end_date, chunk_days=chunk_days)
+
+def fetch_ledger_opening_balances():
+    """Fetch opening balances for all ledgers."""
     xml_request = """
     <ENVELOPE>
         <HEADER>
@@ -366,77 +460,143 @@ def fetch_ledgers():
     </ENVELOPE>
     """
     
-    log("Fetching ledger master data")
-    return send_tally_request(xml_request)
-
-def fetch_groups():
-    """Fetch group master data."""
-    xml_request = """
-    <ENVELOPE>
-        <HEADER>
-            <TALLYREQUEST>Export Data</TALLYREQUEST>
-        </HEADER>
-        <BODY>
-            <EXPORTDATA>
-                <REQUESTDESC>
-                    <REPORTNAME>List of Groups</REPORTNAME>
-                </REQUESTDESC>
-            </EXPORTDATA>
-        </BODY>
-    </ENVELOPE>
-    """
+    log("Fetching ledger opening balances")
+    result = send_tally_request(xml_request)
     
-    log("Fetching group master data")
-    return send_tally_request(xml_request)
+    if not result:
+        log("❌ No response from Tally for ledger opening balances")
+        return []
+    
+    opening_balances = []
+    
+    def extract_ledger_info(obj):
+        if isinstance(obj, dict):
+            # Look for LEDGER objects
+            if 'LEDGER' in obj:
+                ledger_data = obj['LEDGER']
+                if isinstance(ledger_data, list):
+                    for ledger in ledger_data:
+                        process_ledger(ledger)
+                else:
+                    process_ledger(ledger_data)
+            
+            # Recursively search
+            for key, value in obj.items():
+                if isinstance(value, (dict, list)):
+                    extract_ledger_info(value)
+        elif isinstance(obj, list):
+            for item in obj:
+                extract_ledger_info(item)
+    
+    def process_ledger(ledger):
+        if isinstance(ledger, dict):
+            ledger_name = ledger.get('NAME', '').strip()
+            opening_balance = ledger.get('OPENINGBALANCE', '0')
+            ledger_group = ledger.get('PARENT', '').strip()
+            
+            # Clean opening balance value
+            if isinstance(opening_balance, str):
+                # Remove currency symbols and clean the value
+                cleaned_balance = re.sub(r'[^\d.-]', '', opening_balance)
+                try:
+                    balance_value = float(cleaned_balance) if cleaned_balance else 0.0
+                except:
+                    balance_value = 0.0
+            else:
+                balance_value = float(opening_balance) if opening_balance else 0.0
+            
+            if ledger_name and balance_value != 0:
+                opening_balances.append({
+                    'ledger_name': ledger_name,
+                    'opening_balance': balance_value,
+                    'group': ledger_group,
+                    'raw_balance': opening_balance
+                })
+    
+    extract_ledger_info(result)
+    
+    log(f"✅ Extracted {len(opening_balances)} ledger opening balances")
+    
+    # Save to file for debugging
+    with open("opening_balances.json", "w", encoding="utf-8") as f:
+        json.dump(opening_balances, f, indent=2, ensure_ascii=False)
+    
+    return opening_balances
 
-def fetch_export_data_json(start_date="20240401", end_date="20250630"):
-    """Fetch comprehensive data as JSON without TDL."""
-    log(f"🔍 Fetching comprehensive data from {start_date} to {end_date}")
+def fetch_complete_tally_data(start_date, end_date):
+    """Fetch complete Tally data: vouchers + opening balances."""
+    log(f"🔍 Fetching complete Tally data from {start_date} to {end_date}")
     
     try:
-        # Fetch all required data
+        # Get company information
         company_name = get_company_name()
-        vouchers = fetch_vouchers(start_date, end_date)
-        ledgers = fetch_ledgers()
-        groups = fetch_groups()
+        if not company_name:
+            log("❌ Could not fetch company name")
+            return None
         
-        # Combine all data
-        combined_data = {
-            "TALLYDATAEXPORT": {
-                "COMPANY": {"NAME": company_name or "Unknown"},
-                "REQUESTDATA": {
-                    "FROMDATE": start_date,
-                    "TODATE": end_date,
-                    "EXPORTDATE": datetime.datetime.now().strftime("%Y%m%d"),
-                    "EXPORTTIME": datetime.datetime.now().strftime("%H%M%S")
-                }
-            }
+        log(f"✅ Company: {company_name}")
+        
+        # Fetch accounting vouchers (7 types)
+        accounting_vouchers = fetch_accounting_vouchers_only(start_date, end_date)
+        
+        # Fetch opening balances
+        opening_balances = fetch_ledger_opening_balances()
+        
+        # Prepare complete data structure
+        complete_data = {
+            "company_name": company_name,
+            "date_range": {
+                "from_date": start_date,
+                "to_date": end_date
+            },
+            "export_info": {
+                "exported_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "total_vouchers": len(accounting_vouchers),
+                "total_opening_balances": len(opening_balances)
+            },
+            "accounting_vouchers": accounting_vouchers,
+            "opening_balances": opening_balances
         }
         
-        # Add vouchers if available
-        if vouchers:
-            combined_data["TALLYDATAEXPORT"]["VOUCHERS"] = vouchers
-            
-        # Add ledgers if available
-        if ledgers:
-            combined_data["TALLYDATAEXPORT"]["LEDGERS"] = ledgers
-            
-        # Add groups if available
-        if groups:
-            combined_data["TALLYDATAEXPORT"]["GROUPS"] = groups
+        # Save complete data to file
+        with open("complete_tally_data.json", "w", encoding="utf-8") as f:
+            json.dump(complete_data, f, indent=2, ensure_ascii=False)
         
-        # Convert to JSON
-        json_data = json.dumps(combined_data, indent=2, ensure_ascii=False)
+        log(f"✅ Complete data export finished:")
+        log(f"   - Vouchers: {len(accounting_vouchers)}")
+        log(f"   - Opening Balances: {len(opening_balances)}")
         
-        log("✅ Successfully fetched and combined data")
-        return json_data
+        return complete_data
         
     except Exception as e:
-        log(f"❌ Error fetching export data: {e}")
+        log(f"❌ Error fetching complete Tally data: {e}")
         return None
 
+def fetch_7_voucher_types_json(start_date, end_date):
+    """Fetch 7 accounting voucher types and return as JSON."""
+    complete_data = fetch_complete_tally_data(start_date, end_date)
+    
+    if complete_data:
+        return json.dumps(complete_data, indent=2, ensure_ascii=False)
+    else:
+        return json.dumps({
+            "error": "Failed to fetch data from Tally",
+            "company_name": get_company_name() or "Unknown",
+            "date_range": {"from_date": start_date, "to_date": end_date},
+            "accounting_vouchers": [],
+            "opening_balances": []
+        }, indent=2, ensure_ascii=False)
+
 # Legacy compatibility functions
-def fetch_export_data(start_date="20240401", end_date="20250630"):
+def fetch_vouchers(start_date, end_date):
+    """Legacy function - fetch vouchers using Day Book."""
+    return fetch_all_vouchers_by_daybook(start_date, end_date)
+
+def fetch_export_data_json(start_date, end_date, chunk_days=1):
+    """Legacy function - fetch complete data as JSON."""
+    return fetch_7_voucher_types_json(start_date, end_date)
+
+def fetch_export_data(start_date, end_date):
     """Legacy function - fetch data as dict."""
     json_data = fetch_export_data_json(start_date, end_date)
     if json_data:
@@ -446,57 +606,44 @@ def fetch_export_data(start_date="20240401", end_date="20250630"):
             return None
     return None
 
-def fetch_daybook_data(start_date="20240401", end_date="20250630"):
-    """Legacy function - fetch vouchers."""
-    return fetch_vouchers(start_date, end_date)
-
-def fetch_ledger_details(start_date="20240401", end_date="20250630"):
-    """Legacy function - fetch ledgers."""
-    return fetch_ledgers()
-
-def fetch_tally_data():
-    """Fetch basic Tally data for connectivity test."""
-    log("🔍 Fetching basic Tally data...")
+def fetch_all_registers(start_date, end_date):
+    """Enhanced function to fetch all 7 accounting voucher types."""
+    accounting_vouchers = fetch_accounting_vouchers_only(start_date, end_date)
     
-    try:
-        company_name = get_company_name()
-        if company_name:
-            log(f"✅ Connected to company: {company_name}")
-        
-        # Get a small sample of data
-        sample_vouchers = fetch_vouchers("20240401", "20240410")
-        sample_ledgers = fetch_ledgers()
-        
-        if sample_vouchers or sample_ledgers:
-            log("✅ Successfully fetched sample data")
-            return {
-                "company_name": company_name,
-                "sample_vouchers": sample_vouchers,
-                "sample_ledgers": sample_ledgers
+    # Convert to transaction format for backward compatibility
+    transactions = []
+    for voucher in accounting_vouchers:
+        if isinstance(voucher, dict):
+            vtype = voucher.get('VOUCHERTYPENAME', '').strip()
+            txn = {
+                'voucher_type': vtype,
+                'register_type': vtype.lower().replace(' ', '_'),
+                'voucher_number': voucher.get('VOUCHERNUMBER', ''),
+                'party_name': voucher.get('PARTYLEDGERNAME', ''),
+                'amount': voucher.get('AMOUNT', '0'),
+                'narration': voucher.get('NARRATION', ''),
+                'date': voucher.get('DATE', ''),
+                'all_fields': voucher
             }
-        else:
-            log("❌ No sample data retrieved")
-            return None
-            
-    except Exception as e:
-        log(f"❌ Error fetching basic data: {e}")
-        return None
+            transactions.append(txn)
+    
+    return transactions
 
 # CLI test runner
 if __name__ == "__main__":
-    def test_basic_connection():
+    def test_connection():
         print("=" * 60)
-        print("TESTING BASIC TALLY CONNECTION")
+        print("TESTING TALLY CONNECTION")
         print("=" * 60)
         return test_tally_connection()
 
-    def test_company_info():
+    def test_company():
         print("\n" + "=" * 60)
-        print("TESTING COMPANY INFO FETCH")
+        print("TESTING COMPANY NAME")
         print("=" * 60)
         company_name = get_company_name()
         if company_name:
-            print(f"✅ Company Name: {company_name}")
+            print(f"✅ Company: {company_name}")
             return True
         else:
             print("❌ Could not fetch company name")
@@ -504,51 +651,52 @@ if __name__ == "__main__":
 
     def test_vouchers():
         print("\n" + "=" * 60)
-        print("TESTING VOUCHER FETCH")
+        print("TESTING VOUCHER EXTRACTION")
         print("=" * 60)
-        vouchers = fetch_vouchers("20240401", "20240410")
+        vouchers = fetch_accounting_vouchers_only("20240401", "20240410")
         if vouchers:
-            print("✅ Successfully fetched vouchers")
+            print(f"✅ Found {len(vouchers)} accounting vouchers")
             return True
         else:
-            print("❌ Could not fetch vouchers")
+            print("❌ No vouchers found")
             return False
 
-    def test_ledgers():
+    def test_opening_balances():
         print("\n" + "=" * 60)
-        print("TESTING LEDGER FETCH")
+        print("TESTING OPENING BALANCES")
         print("=" * 60)
-        ledgers = fetch_ledgers()
-        if ledgers:
-            print("✅ Successfully fetched ledgers")
+        balances = fetch_ledger_opening_balances()
+        if balances:
+            print(f"✅ Found {len(balances)} opening balances")
             return True
         else:
-            print("❌ Could not fetch ledgers")
+            print("❌ No opening balances found")
             return False
 
-    def test_json_export():
+    def test_complete_data():
         print("\n" + "=" * 60)
-        print("TESTING JSON EXPORT")
+        print("TESTING COMPLETE DATA EXTRACTION")
         print("=" * 60)
-        json_data = fetch_export_data_json("20240401", "20240410")
-        if json_data:
-            print("✅ Successfully exported data as JSON")
-            print(f"JSON size: {len(json_data)} characters")
+        complete_data = fetch_complete_tally_data("20240401", "20240410")
+        if complete_data:
+            print(f"✅ Complete data extraction successful")
+            print(f"   - Vouchers: {len(complete_data.get('accounting_vouchers', []))}")
+            print(f"   - Opening Balances: {len(complete_data.get('opening_balances', []))}")
             return True
         else:
-            print("❌ Could not export data as JSON")
+            print("❌ Complete data extraction failed")
             return False
 
     def main():
-        print("🚀 STARTING TALLY CONNECTOR TESTS")
+        print("🚀 ENHANCED TALLY CONNECTOR TESTS")
         print("=" * 60)
         
         tests = [
-            ("Basic Connection", test_basic_connection),
-            ("Company Info", test_company_info),
-            ("Voucher Fetch", test_vouchers),
-            ("Ledger Fetch", test_ledgers),
-            ("JSON Export", test_json_export)
+            ("Connection Test", test_connection),
+            ("Company Name", test_company),
+            ("Voucher Extraction", test_vouchers),
+            ("Opening Balances", test_opening_balances),
+            ("Complete Data", test_complete_data)
         ]
         
         results = {}
@@ -556,7 +704,7 @@ if __name__ == "__main__":
             try:
                 results[test_name] = test_func()
             except Exception as e:
-                print(f"❌ {test_name} failed with exception: {e}")
+                print(f"❌ {test_name} failed: {e}")
                 results[test_name] = False
         
         print("\n" + "=" * 60)
@@ -571,12 +719,11 @@ if __name__ == "__main__":
         total = len(results)
         print(f"\nOverall: {passed}/{total} tests passed")
         
-        if passed == total:
-            print("🎉 All tests passed! Tally connector is working correctly.")
-        else:
-            print("⚠️  Some tests failed. Check the logs above for details.")
-        
         return passed == total
 
     success = main()
     sys.exit(0 if success else 1)
+
+
+
+

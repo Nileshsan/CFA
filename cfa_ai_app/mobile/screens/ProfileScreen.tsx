@@ -6,7 +6,8 @@ import {
   ScrollView, 
   TouchableOpacity, 
   Switch,
-  Alert
+  Alert,
+  Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -332,4 +333,4 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
-});
+}); 

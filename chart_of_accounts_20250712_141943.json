@@ -1,0 +1,18 @@
+{
+  "company_name": "bd9d731b-d3c9-4771-8880-e4baca94aeaa",
+  "extraction_date": "2025-07-12 14:19:43",
+  "total_ledgers": 0,
+  "ledgers_by_category": {},
+  "all_ledgers": [],
+  "client_ledgers": [],
+  "summary": {
+    "total_opening_debit": 0,
+    "total_opening_credit": 0,
+    "total_closing_debit": 0,
+    "total_closing_credit": 0,
+    "net_opening_balance": 0,
+    "net_closing_balance": 0
+  },
+  "total_categories": 0,
+  "total_client_ledgers": 0
+}

@@ -1,0 +1,16 @@
+[2025-07-14 19:59:29] Loaded TALLY_URL: http://localhost:9000
+[2025-07-14 19:59:29] ✅ Tally service is running on localhost:9000
+[2025-07-14 19:59:29] Testing connection to http://localhost:9000
+[2025-07-14 19:59:53] Test response: status=200, length=80165602
+[2025-07-14 19:59:53] ✅ Tally connection test successful
+[2025-07-14 19:59:54] [DEBUG] Found voucher types: ['Delivery Note', 'Purchase Order', 'Sales']; extracted 27 vouchers
+[2025-07-14 19:59:54] Fetching ledger master data
+[2025-07-14 19:59:54] 🔍 Fetching ALL data from 20240401 to 20240410
+[2025-07-14 19:59:54] Fetching ledger master data
+[2025-07-14 19:59:54] Fetching group master data
+[2025-07-14 19:59:54] Fetching stock items
+[2025-07-14 20:00:00] ❌ Parse error: not well-formed (invalid token): line 218269, column 42
+[2025-07-14 20:00:00] Fetching chunk: 20240401 to 20240410
+[2025-07-14 20:00:01] [DEBUG] Found voucher types: ['Delivery Note', 'Purchase Order', 'Sales']; extracted 27 vouchers
+[2025-07-14 20:00:01] Chunk 20240401 to 20240410: {'Purchase Order': 8, 'Sales': 9, 'Delivery Note': 10}
+[2025-07-14 20:00:01] ✅ Successfully fetched and combined ALL data. Saved to tally_full_export.json

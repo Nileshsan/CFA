@@ -2,7 +2,10 @@ import os
 import sys
 import tkinter as tk
 from tkinter import messagebox, ttk
-from tally_connector import test_tally_connection, fetch_export_data_json, get_company_name
+from tally_connector import (
+    test_tally_connection, get_company_name, fetch_complete_tally_data,
+    fetch_accounting_vouchers_only, fetch_ledger_opening_balances, fetch_all_registers
+)
 from api_connector import send_data_to_backend, test_backend_connection
 from dotenv import load_dotenv
 import cv2
@@ -10,15 +13,32 @@ import datetime
 from PIL import Image, ImageTk
 import threading
 import json
+from dateutil import parser
 
-# Helper to get resource path for PyInstaller
+# Dependency check for tenacity
+try:
+    import tenacity
+except ImportError:
+    import tkinter as tk
+    from tkinter import messagebox
+    root = tk.Tk()
+    root.withdraw()
+    messagebox.showerror(
+        "Missing Dependency",
+        "The required package 'tenacity' is not installed.\n"
+        "Please install it using 'pip install tenacity' and restart the application."
+    )
+    sys.exit(1)
+
+# Helper functions
 def resource_path(relative_path):
-    import sys, os
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, relative_path)
+    import sys
+    import os
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        return os.path.join(getattr(sys, '_MEIPASS'), relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
 
-# DLL path fix for PyInstaller
+# PyInstaller DLL path fix
 if getattr(sys, 'frozen', False):
     base_path = getattr(sys, '_MEIPASS', os.path.abspath('.'))
 else:
@@ -29,8 +49,8 @@ os.environ['PATH'] += os.pathsep + base_path
 # Load environment
 load_dotenv()
 CONFIG_FILE = "config.env"
+SYNC_HISTORY_FILE = "sync_history.json"
 
-# Load configuration from config file
 def load_config():
     config = {"API_KEY": "", "TALLY_URL": "http://localhost:9000", "BACKEND_URL": ""}
     if os.path.exists(CONFIG_FILE):
@@ -41,7 +61,26 @@ def load_config():
                     config[key] = value
     return config
 
+def load_sync_history():
+    """Load sync history from file"""
+    if os.path.exists(SYNC_HISTORY_FILE):
+        try:
+            with open(SYNC_HISTORY_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            return {"last_sync": None, "total_syncs": 0, "last_voucher_count": 0}
+    return {"last_sync": None, "total_syncs": 0, "last_voucher_count": 0}
+
+def save_sync_history(sync_data):
+    """Save sync history to file"""
+    try:
+        with open(SYNC_HISTORY_FILE, 'w') as f:
+            json.dump(sync_data, f, indent=2)
+    except Exception as e:
+        log(f"Failed to save sync history: {e}")
+
 config = load_config()
+sync_history = load_sync_history()
 api_key = config.get("API_KEY", "")
 
 # Logging setup
@@ -52,14 +91,14 @@ def log(msg):
         f.write(f"[{timestamp}] {msg}\n")
     print(f"[LOG] {msg}")
 
-# Modern GUI Setup
+# GUI Setup
 app = tk.Tk()
-app.title("CFA Tally Sync Agent")
-app.geometry("550x600")
+app.title("CFA Tally Sync Agent - Enhanced")
+app.geometry("600x750")
 app.configure(bg="#f8fff8")
 app.resizable(False, False)
 
-# Use a simple icon filename for better compatibility
+# Icon setup
 icon_filename = 'appicon.ico'
 icon_path = resource_path(f'build_output/{icon_filename}')
 try:
@@ -86,6 +125,23 @@ company_frame.pack(pady=5, padx=20, fill="x")
 tk.Label(company_frame, text="Company:", font=("Segoe UI", 10, "bold"), bg="#f8fff8").pack(side=tk.LEFT, padx=5)
 company_label = tk.Label(company_frame, text="Not Connected", font=("Segoe UI", 10), bg="#f8fff8", fg="#d32f2f")
 company_label.pack(side=tk.LEFT, padx=5)
+
+# Data Status Frame
+status_frame = tk.Frame(app, bg="#f8fff8", relief="sunken", bd=1)
+status_frame.pack(pady=5, padx=20, fill="x")
+tk.Label(status_frame, text="Last Sync:", font=("Segoe UI", 10, "bold"), bg="#f8fff8").pack(side=tk.LEFT, padx=5)
+last_sync_label = tk.Label(status_frame, text="Never", font=("Segoe UI", 10), bg="#f8fff8", fg="#d32f2f")
+last_sync_label.pack(side=tk.LEFT, padx=5)
+
+# Sync Statistics Frame
+stats_frame = tk.Frame(app, bg="#f8fff8", relief="sunken", bd=1)
+stats_frame.pack(pady=5, padx=20, fill="x")
+tk.Label(stats_frame, text="Total Syncs:", font=("Segoe UI", 10, "bold"), bg="#f8fff8").pack(side=tk.LEFT, padx=5)
+total_syncs_label = tk.Label(stats_frame, text="0", font=("Segoe UI", 10), bg="#f8fff8", fg="#388e3c")
+total_syncs_label.pack(side=tk.LEFT, padx=5)
+tk.Label(stats_frame, text="Last Count:", font=("Segoe UI", 10, "bold"), bg="#f8fff8").pack(side=tk.LEFT, padx=(20, 5))
+last_count_label = tk.Label(stats_frame, text="0", font=("Segoe UI", 10), bg="#f8fff8", fg="#388e3c")
+last_count_label.pack(side=tk.LEFT, padx=5)
 
 # API Key Entry
 api_frame = tk.Frame(app, bg="#f8fff8")
@@ -128,6 +184,15 @@ tt_save.grid(row=0, column=0, padx=8)
 tt_qr = ttk.Button(button_frame, text="Scan API Key QR", command=lambda: scan_qr_threaded(), width=16)
 tt_qr.grid(row=0, column=1, padx=8)
 
+# Sync Type Selection
+sync_type_frame = tk.Frame(app, bg="#f8fff8")
+sync_type_frame.pack(pady=10)
+tk.Label(sync_type_frame, text="Sync Type:", font=("Segoe UI", 12), bg="#f8fff8").pack(side=tk.LEFT, padx=(0, 8))
+sync_type_var = tk.StringVar(value="vouchers_only")
+sync_type_combo = ttk.Combobox(sync_type_frame, textvariable=sync_type_var, width=25, font=("Segoe UI", 10), state="readonly")
+sync_type_combo['values'] = ('vouchers_only', 'complete_data', 'opening_balances_only')
+sync_type_combo.pack(side=tk.LEFT)
+
 # Date Range Selection
 date_frame = tk.Frame(app, bg="#f8fff8")
 date_frame.pack(pady=10)
@@ -140,6 +205,34 @@ from_entry.pack(side=tk.LEFT, padx=(0, 10))
 tk.Label(date_frame, text="To:", font=("Segoe UI", 10), bg="#f8fff8").pack(side=tk.LEFT, padx=(0, 5))
 to_entry = ttk.Entry(date_frame, textvariable=to_date, width=10, font=("Segoe UI", 10))
 to_entry.pack(side=tk.LEFT)
+
+# Quick Date Buttons
+quick_date_frame = tk.Frame(app, bg="#f8fff8")
+quick_date_frame.pack(pady=5)
+ttk.Button(quick_date_frame, text="Today", command=lambda: set_date_range("today"), width=12).grid(row=0, column=0, padx=2)
+ttk.Button(quick_date_frame, text="This Week", command=lambda: set_date_range("week"), width=12).grid(row=0, column=1, padx=2)
+ttk.Button(quick_date_frame, text="This Month", command=lambda: set_date_range("month"), width=12).grid(row=0, column=2, padx=2)
+ttk.Button(quick_date_frame, text="This Year", command=lambda: set_date_range("year"), width=12).grid(row=0, column=3, padx=2)
+
+def set_date_range(period):
+    """Set date range based on period"""
+    today = datetime.date.today()
+    if period == "today":
+        date_str = today.strftime("%Y%m%d")
+        from_date.set(date_str)
+        to_date.set(date_str)
+    elif period == "week":
+        start_of_week = today - datetime.timedelta(days=today.weekday())
+        from_date.set(start_of_week.strftime("%Y%m%d"))
+        to_date.set(today.strftime("%Y%m%d"))
+    elif period == "month":
+        start_of_month = today.replace(day=1)
+        from_date.set(start_of_month.strftime("%Y%m%d"))
+        to_date.set(today.strftime("%Y%m%d"))
+    elif period == "year":
+        start_of_year = today.replace(month=1, day=1)
+        from_date.set(start_of_year.strftime("%Y%m%d"))
+        to_date.set(today.strftime("%Y%m%d"))
 
 # Sync Button
 tt_sync = ttk.Button(app, text="Sync Data Now", command=lambda: sync_data_threaded(), width=22)
@@ -168,6 +261,17 @@ def update_log_display(message):
     log_text.insert(tk.END, f"{datetime.datetime.now().strftime('%H:%M:%S')} - {message}\n")
     log_text.see(tk.END)
     app.update_idletasks()
+
+def update_status_display():
+    """Update the status display with sync history"""
+    if sync_history["last_sync"]:
+        last_sync_time = datetime.datetime.fromisoformat(sync_history["last_sync"])
+        last_sync_label.config(text=last_sync_time.strftime("%Y-%m-%d %H:%M"), fg="#388e3c")
+    else:
+        last_sync_label.config(text="Never", fg="#d32f2f")
+    
+    total_syncs_label.config(text=str(sync_history["total_syncs"]))
+    last_count_label.config(text=str(sync_history["last_voucher_count"]))
 
 def save_config():
     """Save configuration to config file"""
@@ -285,10 +389,17 @@ def test_backend_connection_gui():
     finally:
         progress.stop()
 
+def normalize_date(date_str):
+    try:
+        return parser.parse(date_str).strftime('%Y%m%d')
+    except Exception:
+        return date_str
+
 def sync_data_threaded():
     threading.Thread(target=sync_data, daemon=True).start()
 
 def sync_data():
+    global sync_history
     log("Sync Data button clicked.")
     update_log_display("Starting data sync...")
     
@@ -326,51 +437,72 @@ def sync_data():
         log("Tally connected. Fetching data...")
         update_log_display("Fetching data from Tally...")
 
-        # Get date range
-        start_date = from_date.get().strip()
-        end_date = to_date.get().strip()
+        # Get and normalize date range
+        start_date_raw = from_date.get().strip()
+        end_date_raw = to_date.get().strip()
+        start_date = normalize_date(start_date_raw)
+        end_date = normalize_date(end_date_raw)
+        
+        update_log_display(f"UI selected date range: {start_date_raw} to {end_date_raw}")
+        log(f"Normalized date range sent to Tally: {start_date} to {end_date}")
         
         if not start_date or not end_date:
             start_date = "20240401"
             end_date = "20250630"
-            
+        
         update_log_display(f"Date range: {start_date} to {end_date}")
 
-        # Fetch data as JSON
-        all_data_json = fetch_export_data_json(start_date, end_date)
+        # Get sync type
+        sync_type = sync_type_var.get()
+        update_log_display(f"Sync type: {sync_type}")
         
-        if all_data_json:
-            # Parse JSON to get record counts
-            try:
-                data_obj = json.loads(all_data_json)
-                voucher_count = 0
-                ledger_count = 0
-                
-                # Count vouchers and ledgers
-                if 'TALLYDATAEXPORT' in data_obj:
-                    vouchers = data_obj['TALLYDATAEXPORT'].get('VOUCHERS', {})
-                    if isinstance(vouchers, dict) and 'VOUCHER' in vouchers:
-                        voucher_data = vouchers['VOUCHER']
-                        voucher_count = len(voucher_data) if isinstance(voucher_data, list) else 1
-                    
-                    ledgers = data_obj['TALLYDATAEXPORT'].get('LEDGERS', {})
-                    if isinstance(ledgers, dict) and 'LEDGER' in ledgers:
-                        ledger_data = ledgers['LEDGER']
-                        ledger_count = len(ledger_data) if isinstance(ledger_data, list) else 1
-                
-                update_log_display(f"Fetched {voucher_count} vouchers and {ledger_count} ledgers")
-            except:
-                update_log_display("Data fetched successfully")
-            
+        # Fetch data based on sync type
+        if sync_type == "vouchers_only":
+            all_transactions = fetch_all_registers(start_date, end_date)
+            data_type = "vouchers"
+        elif sync_type == "complete_data":
+            all_transactions = fetch_complete_tally_data(start_date, end_date)
+            data_type = "complete"
+        elif sync_type == "opening_balances_only":
+            all_transactions = fetch_ledger_opening_balances()
+            data_type = "opening_balances"
+        else:
+            all_transactions = fetch_all_registers(start_date, end_date)
+            data_type = "vouchers"
+
+        if all_transactions:
+            # Count vouchers by type for log
+            voucher_counts = {}
+            if data_type == "opening_balances":
+                update_log_display(f"Fetched {len(all_transactions)} opening balances")
+            else:
+                for txn in all_transactions:
+                    if isinstance(txn, dict):
+                        vtype = txn.get('voucher_type', 'Unknown')
+                    else:
+                        vtype = 'Unknown'
+                    voucher_counts[vtype] = voucher_counts.get(vtype, 0) + 1
+                update_log_display(f"Fetched {len(all_transactions)} records: {voucher_counts}")
+
+            # Convert to JSON for backend
+            all_data_json = json.dumps(all_transactions, indent=2, ensure_ascii=False)
+
             status_label.config(text="Sending data to backend...", fg="#2e7d32")
             app.update_idletasks()
             log("Data fetched from Tally as JSON. Sending to backend...")
             update_log_display("Sending data to backend...")
             
-            success = send_data_to_backend(api_key, "export_json", all_data_json, is_json=True)
-            
+            success = send_data_to_backend(api_key, data_type, all_data_json, is_json=True)
+
             if success:
-                messagebox.showinfo("Success", "Data synced successfully!")
+                # Update sync history
+                sync_history["last_sync"] = datetime.datetime.now().isoformat()
+                sync_history["total_syncs"] += 1
+                sync_history["last_voucher_count"] = len(all_transactions)
+                save_sync_history(sync_history)
+                update_status_display()
+                
+                messagebox.showinfo("Success", f"Data synced successfully!\nSynced {len(all_transactions)} records")
                 status_label.config(text="Data synced successfully!", fg="#388e3c")
                 log("Data synced to backend successfully.")
                 update_log_display("Data synced successfully!")
@@ -400,6 +532,9 @@ if api_key:
     update_log_display("API Key loaded from config")
 else:
     update_log_display("No API Key found - please configure")
+
+# Update status display on startup
+update_status_display()
 
 app.mainloop()
 

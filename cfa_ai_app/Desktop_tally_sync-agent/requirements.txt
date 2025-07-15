@@ -1,6 +1,8 @@
 requests
 xmltodict
 python-dotenv
-tk
 opencv-python
 Pillow
+tenacity
+python-dateutil
+keyring
