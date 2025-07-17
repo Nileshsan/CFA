@@ -24,7 +24,7 @@ class TallyTransaction(models.Model):
     voucher_no = models.CharField(max_length=100)
     date = models.DateField()
     party_name = models.CharField(max_length=255)  # Client name from Tally
-    narration = models.TextField(blank=True)
+    narration = models.TextField(blank=True, null=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     register_type = models.CharField(max_length=20, choices=REGISTER_CHOICES)
     
@@ -46,6 +46,17 @@ class TallyTransaction(models.Model):
     
     def __str__(self):
         return f"{self.party_name} - {self.voucher_no} ({self.register_type})"
+
+class LedgerEntry(models.Model):
+    transaction = models.ForeignKey('TallyTransaction', on_delete=models.CASCADE, related_name='ledger_entries')
+    ledger_name = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    is_debit = models.BooleanField()
+    is_credit = models.BooleanField()
+    raw_data = models.JSONField(default=dict)  # Store all original ledger entry fields
+
+    def __str__(self):
+        return f"{self.ledger_name}: {self.amount} ({'Dr' if self.is_debit else 'Cr'})"
 
 class UserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
@@ -82,3 +93,26 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.email} ({self.role})"
+
+class LedgerOpeningBalance(models.Model):
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='opening_balances')
+    ledger_name = models.CharField(max_length=255)
+    opening_balance = models.DecimalField(max_digits=15, decimal_places=2)
+    group = models.CharField(max_length=255, blank=True)
+    raw_balance = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.client.name} - {self.ledger_name}: {self.opening_balance}"
+
+class Token(models.Model):
+    key = models.CharField(max_length=40, unique=True)
+    user = models.ForeignKey(User, related_name='auth_tokens', on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Token for {self.user.email}: {self.key}"
+
+    class Meta:
+        verbose_name = "Token"
+        verbose_name_plural = "Tokens"

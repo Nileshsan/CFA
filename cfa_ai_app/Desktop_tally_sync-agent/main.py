@@ -426,11 +426,15 @@ def sync_data():
             update_log_display("Sync aborted - Tally not connected")
             return
 
-        # Get company name for logging
+        # Get company name for logging/display only (never sent to backend)
         company_name = get_company_name()
         if company_name:
             update_log_display(f"Connected to Tally - Company: {company_name}")
             company_label.config(text=company_name, fg="#388e3c")
+        else:
+            # If company name extraction fails, just log it, do not block sync
+            update_log_display("Connected to Tally - Company name not found")
+            company_label.config(text="Connected (Unknown Company)", fg="#388e3c")
 
         status_label.config(text="Fetching data from Tally...", fg="#2e7d32")
         app.update_idletasks()
@@ -492,6 +496,7 @@ def sync_data():
             log("Data fetched from Tally as JSON. Sending to backend...")
             update_log_display("Sending data to backend...")
             
+            # Only send API_KEY (SPI token) and data to backend, never company name
             success = send_data_to_backend(api_key, data_type, all_data_json, is_json=True)
 
             if success:

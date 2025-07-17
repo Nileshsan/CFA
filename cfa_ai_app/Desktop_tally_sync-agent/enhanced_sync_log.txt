@@ -279,3 +279,31 @@
 [2025-07-15 13:06:59] ✅ Tally service is running on localhost:9000
 [2025-07-15 13:06:59] ✅ Found 0 client ledgers
 [2025-07-15 13:06:59] ✅ Successfully processed 0 clients
+[2025-07-16 11:16:01] Loaded TALLY_URL: http://localhost:9000
+[2025-07-16 11:16:01] 🧪 Testing Enhanced Tally Connector
+[2025-07-16 11:16:01] ✅ Tally service is running on localhost:9000
+[2025-07-16 11:16:01] ✅ Tally service is running on localhost:9000
+[2025-07-16 11:16:01] ✅ Connected to company: All Masters
+[2025-07-16 11:16:01] Fetching client ledgers
+[2025-07-16 11:16:01] ✅ Tally service is running on localhost:9000
+[2025-07-16 11:16:01] ✅ Found 0 client ledgers
+[2025-07-16 11:16:01] ❌ No client ledgers found
+[2025-07-16 11:16:01] Fetching client ledgers
+[2025-07-16 11:16:01] ✅ Tally service is running on localhost:9000
+[2025-07-16 11:16:01] ✅ Found 0 client ledgers
+[2025-07-16 11:16:01] ✅ Tally service is running on localhost:9000
+[2025-07-16 11:16:01] Fetching client ledgers
+[2025-07-16 11:16:01] ✅ Tally service is running on localhost:9000
+[2025-07-16 11:16:01] ✅ Found 0 client ledgers
+[2025-07-16 11:16:01] 🔍 Fetching comprehensive client data (no date filter)
+[2025-07-16 11:16:01] ✅ Tally service is running on localhost:9000
+[2025-07-16 11:16:01] Fetching client ledgers
+[2025-07-16 11:16:01] ✅ Tally service is running on localhost:9000
+[2025-07-16 11:16:01] ✅ Found 0 client ledgers
+[2025-07-16 11:16:01] ✅ Successfully processed 0 clients
+[2025-07-16 11:16:01] 🔍 Fetching comprehensive client data (no date filter)
+[2025-07-16 11:16:01] ✅ Tally service is running on localhost:9000
+[2025-07-16 11:16:01] Fetching client ledgers
+[2025-07-16 11:16:01] ✅ Tally service is running on localhost:9000
+[2025-07-16 11:16:01] ✅ Found 0 client ledgers
+[2025-07-16 11:16:01] ✅ Successfully processed 0 clients

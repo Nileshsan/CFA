@@ -196,23 +196,20 @@ def clean_xml_data(xml_str):
     retry=retry_if_exception_type((requests.exceptions.ConnectionError, requests.exceptions.Timeout))
 )
 def send_tally_request(xml_request):
-    """Send XML request to Tally and return parsed response."""
+    """Send XML request to Tally and return parsed response or recoverable vouchers on XML error."""
     url = os.getenv("TALLY_URL", "http://localhost:9000")
     headers = {'Content-Type': 'application/xml'}
-    
     try:
         response = requests.post(
-            url, 
-            data=xml_request.encode('utf-8'), 
-            headers=headers, 
+            url,
+            data=xml_request.encode('utf-8'),
+            headers=headers,
             timeout=(CONNECTION_TIMEOUT, READ_TIMEOUT)
         )
-        
         if response.status_code == 200:
             # Save raw response for debugging
             with open("raw_tally_response.xml", "w", encoding="utf-8") as f:
                 f.write(response.text)
-            
             # Clean and parse XML
             cleaned_xml = clean_xml_data(response.text)
             try:
@@ -220,18 +217,42 @@ def send_tally_request(xml_request):
             except Exception as e:
                 log(f"❌ XML Parse error: {e}")
                 log(f"Raw response: {response.text[:500]}...")
-                return None
+                # --- Enhanced recovery: extract <VOUCHER> blocks ---
+                voucher_blocks = re.findall(r'<VOUCHER[\s\S]*?</VOUCHER>', response.text)
+                recovered = 0
+                skipped = 0
+                vouchers = []
+                for vb in voucher_blocks:
+                    try:
+                        # Wrap in root for parsing
+                        xml_fragment = f'<?xml version="1.0" encoding="UTF-8"?><ENVELOPE>{vb}</ENVELOPE>'
+                        d = xmltodict.parse(xml_fragment)
+                        # Extract voucher dict
+                        v = d.get('ENVELOPE', {}).get('VOUCHER')
+                        if v:
+                            vouchers.append(v)
+                            recovered += 1
+                        else:
+                            skipped += 1
+                    except Exception as ve:
+                        skipped += 1
+                log(f"[RECOVERY] Extracted {recovered} vouchers from malformed XML, skipped {skipped}.")
+                # Save failed chunk for manual review
+                with open("failed_chunk_raw.xml", "w", encoding="utf-8") as f:
+                    f.write(response.text)
+                # Return as if it was a normal response
+                return {'ENVELOPE': {'VOUCHER': vouchers}}
         else:
             log(f"❌ HTTP error: {response.status_code}")
             log(f"Response: {response.text[:200]}...")
             return None
-            
     except Exception as e:
         log(f"❌ Request error: {e}")
         raise
 
 def get_company_name():
-    """Get the company name from Tally."""
+    """Get the currently open company name from Tally using Company Info or fallback to custom TDL."""
+    # 1. Try built-in Company Info report
     xml_request = """
     <ENVELOPE>
         <HEADER>
@@ -240,46 +261,65 @@ def get_company_name():
         <BODY>
             <EXPORTDATA>
                 <REQUESTDESC>
-                    <REPORTNAME>list of companies</REPORTNAME>
+                    <REPORTNAME>List of Companies</REPORTNAME>
                 </REQUESTDESC>
             </EXPORTDATA>
         </BODY>
     </ENVELOPE>
     """
-    
     data = send_tally_request(xml_request)
-    if not data:
-        return None
-    
-    def find_company_name(obj):
-        if isinstance(obj, dict):
-            # Look for COMPANY > NAME structure
-            if "COMPANY" in obj:
-                company = obj["COMPANY"]
-                if isinstance(company, dict) and "NAME" in company:
-                    name = company["NAME"]
-                    if isinstance(name, str) and name.strip():
-                        return name.strip()
-                elif isinstance(company, list):
-                    for comp in company:
-                        if isinstance(comp, dict) and "NAME" in comp:
-                            name = comp["NAME"]
-                            if isinstance(name, str) and name.strip():
-                                return name.strip()
-            
-            # Recursively search
-            for key, value in obj.items():
-                result = find_company_name(value)
-                if result:
-                    return result
-        elif isinstance(obj, list):
-            for item in obj:
-                result = find_company_name(item)
-                if result:
-                    return result
-        return None
-    
-    return find_company_name(data)
+    if data:
+        try:
+            # ENVELOPE > BODY > DATA > TALLYMESSAGE > COMPANY > NAME
+            companies = data.get('ENVELOPE', {}).get('BODY', {}).get('DATA', {}).get('TALLYMESSAGE', [])
+            if isinstance(companies, dict):
+                companies = [companies]
+            for company in companies:
+                comp = company.get('COMPANY')
+                if comp:
+                    name = comp.get('NAME')
+                    if name:
+                        log(f"✅ Extracted company name: {name}")
+                        return name
+        except Exception as e:
+            log(f"❌ Error extracting company name from Company Info: {e}")
+
+    # 2. Fallback: Try your custom TDL report
+    xml_request = """
+    <ENVELOPE>
+        <HEADER>
+            <TALLYREQUEST>Export Data</TALLYREQUEST>
+        </HEADER>
+        <BODY>
+            <EXPORTDATA>
+                <REQUESTDESC>
+                    <REPORTNAME>Export Company Name XML</REPORTNAME>
+                </REQUESTDESC>
+            </EXPORTDATA>
+        </BODY>
+    </ENVELOPE>
+    """
+    data = send_tally_request(xml_request)
+    if data:
+        try:
+            msg = data.get('ENVELOPE', {}).get('BODY', {}).get('DATA', {}).get('TALLYMESSAGE', {})
+            if msg:
+                if isinstance(msg, dict):
+                    for v in msg.values():
+                        if isinstance(v, str) and v.strip():
+                            log(f"✅ Extracted company name from custom TDL: {v.strip()}")
+                            return v.strip()
+                elif isinstance(msg, list):
+                    for m in msg:
+                        for v in m.values():
+                            if isinstance(v, str) and v.strip():
+                                log(f"✅ Extracted company name from custom TDL: {v.strip()}")
+                                return v.strip()
+        except Exception as e:
+            log(f"❌ Error extracting company name from custom TDL: {e}")
+
+    log("❌ Could not extract company name from Tally")
+    return None
 
 def extract_vouchers_from_response(response_data):
     """Extract vouchers from any nested structure in Tally response."""
@@ -526,25 +566,14 @@ def fetch_ledger_opening_balances():
 def fetch_complete_tally_data(start_date, end_date):
     """Fetch complete Tally data: vouchers + opening balances."""
     log(f"🔍 Fetching complete Tally data from {start_date} to {end_date}")
-    
     try:
-        # Get company information
-        company_name = get_company_name()
-        if not company_name:
-            log("❌ Could not fetch company name")
-            return None
-        
-        log(f"✅ Company: {company_name}")
-        
         # Fetch accounting vouchers (7 types)
         accounting_vouchers = fetch_accounting_vouchers_only(start_date, end_date)
-        
         # Fetch opening balances
         opening_balances = fetch_ledger_opening_balances()
-        
-        # Prepare complete data structure
+        # Prepare complete data structure (company_name only for local use, not for backend)
         complete_data = {
-            "company_name": company_name,
+            "company_name": get_company_name(),  # For local/logging only
             "date_range": {
                 "from_date": start_date,
                 "to_date": end_date
@@ -557,17 +586,13 @@ def fetch_complete_tally_data(start_date, end_date):
             "accounting_vouchers": accounting_vouchers,
             "opening_balances": opening_balances
         }
-        
         # Save complete data to file
         with open("complete_tally_data.json", "w", encoding="utf-8") as f:
             json.dump(complete_data, f, indent=2, ensure_ascii=False)
-        
         log(f"✅ Complete data export finished:")
         log(f"   - Vouchers: {len(accounting_vouchers)}")
         log(f"   - Opening Balances: {len(opening_balances)}")
-        
         return complete_data
-        
     except Exception as e:
         log(f"❌ Error fetching complete Tally data: {e}")
         return None
@@ -606,28 +631,141 @@ def fetch_export_data(start_date, end_date):
             return None
     return None
 
+def extract_ledger_entries_from_voucher(voucher):
+    """
+    Extract all credit/debit ledger entries from a voucher dict.
+    Returns a list of dicts: [{ledger_name, amount, is_debit, is_credit, ...}]
+    """
+    entries = []
+    # Tally can use ALLLEDGERENTRIES.LIST or LEDGERENTRIES.LIST
+    ledger_lists = []
+    for key in ["ALLLEDGERENTRIES.LIST", "LEDGERENTRIES.LIST"]:
+        if key in voucher:
+            val = voucher[key]
+            if isinstance(val, list):
+                ledger_lists.extend(val)
+            elif isinstance(val, dict):
+                ledger_lists.append(val)
+    for entry in ledger_lists:
+        if not isinstance(entry, dict):
+            continue
+        ledger_name = entry.get("LEDGERNAME", "").strip()
+        amount = entry.get("AMOUNT", "0")
+        # Tally: Debit is positive, Credit is negative (usually)
+        try:
+            amt_val = float(str(amount).replace(",", ""))
+        except:
+            amt_val = 0.0
+        is_debit = amt_val > 0
+        is_credit = amt_val < 0
+        entries.append({
+            "ledger_name": ledger_name,
+            "amount": amt_val,
+            "is_debit": is_debit,
+            "is_credit": is_credit,
+            "raw_amount": amount,
+            "all_fields": entry
+        })
+    return entries
+
 def fetch_all_registers(start_date, end_date):
-    """Enhanced function to fetch all 7 accounting voucher types."""
+    """Enhanced function to fetch all 7 accounting voucher types, including all ledger entries."""
     accounting_vouchers = fetch_accounting_vouchers_only(start_date, end_date)
-    
-    # Convert to transaction format for backward compatibility
     transactions = []
+    required_fields = ["party_name", "voucher_no", "voucher_type", "date", "amount", "ledger_entries"]
     for voucher in accounting_vouchers:
         if isinstance(voucher, dict):
             vtype = voucher.get('VOUCHERTYPENAME', '').strip()
+            voucher_number = voucher.get('VOUCHERNUMBER', '')
+            narration = voucher.get('NARRATION', '')
+            date = voucher.get('DATE', '')
+            # Extract all ledger entries (credit/debit splits)
+            ledger_entries = extract_ledger_entries_from_voucher(voucher)
+            # --- Ensure all required fields are present ---
             txn = {
                 'voucher_type': vtype,
-                'register_type': vtype.lower().replace(' ', '_'),
-                'voucher_number': voucher.get('VOUCHERNUMBER', ''),
-                'party_name': voucher.get('PARTYLEDGERNAME', ''),
-                'amount': voucher.get('AMOUNT', '0'),
-                'narration': voucher.get('NARRATION', ''),
-                'date': voucher.get('DATE', ''),
-                'all_fields': voucher
+                'voucher_no': voucher_number,
+                'date': date,
+                'amount': voucher.get('AMOUNT', ''),
+                'party_name': voucher.get('PARTYNAME', ''),
+                'ledger_entries': ledger_entries,
+                'narration': narration,
+                'voucher_all_fields': voucher
             }
+            # Fill missing required fields with empty values
+            for field in required_fields:
+                if field not in txn:
+                    txn[field] = '' if field != 'ledger_entries' else []
             transactions.append(txn)
-    
     return transactions
+
+# Recovery: also provide a function to convert recovered vouchers to transaction list
+
+def recover_failed_chunk_transactions(xml_path="failed_chunk_raw.xml"):
+    """Convert recovered vouchers from failed chunk XML into transaction dicts with all ledger entries."""
+    vouchers = recover_failed_chunk_vouchers(xml_path)
+    transactions = []
+    for voucher in vouchers:
+        if isinstance(voucher, dict):
+            vtype = voucher.get('VOUCHERTYPENAME', '').strip()
+            voucher_number = voucher.get('VOUCHERNUMBER', '')
+            narration = voucher.get('NARRATION', '')
+            date = voucher.get('DATE', '')
+            ledger_entries = extract_ledger_entries_from_voucher(voucher)
+            for entry in ledger_entries:
+                txn = {
+                    'voucher_type': vtype,
+                    'register_type': vtype.lower().replace(' ', '_'),
+                    'voucher_number': voucher_number,
+                    'narration': narration,
+                    'date': date,
+                    'ledger_name': entry['ledger_name'],
+                    'amount': entry['amount'],
+                    'is_debit': entry['is_debit'],
+                    'is_credit': entry['is_credit'],
+                    'raw_amount': entry['raw_amount'],
+                    'ledger_entry': entry['all_fields'],
+                    'voucher_all_fields': voucher
+                }
+                transactions.append(txn)
+    return transactions
+
+def recover_failed_chunk_vouchers(xml_path="failed_chunk_raw.xml"):
+    """
+    Extract all <VOUCHER> blocks from a failed chunk XML file, parse each individually, and return as list of dicts.
+    Handles malformed XML by extracting blocks with regex.
+    """
+    vouchers = []
+    try:
+        with open(xml_path, 'r', encoding='utf-8') as f:
+            raw_xml = f.read()
+    except Exception as e:
+        print(f"Failed to read {xml_path}: {e}")
+        return []
+    # Use regex to extract all <VOUCHER>...</VOUCHER> blocks
+    voucher_blocks = re.findall(r'<VOUCHER[\s\S]*?</VOUCHER>', raw_xml, re.IGNORECASE)
+    for block in voucher_blocks:
+        try:
+            # Wrap in a root for parsing
+            xml_str = f'<ROOT>{block}</ROOT>'
+            root = ET.fromstring(xml_str)
+            voucher_elem = root.find('VOUCHER')
+            if voucher_elem is not None:
+                voucher_dict = {child.tag: child.text for child in voucher_elem}
+                # Also include sub-elements as dicts
+                for child in voucher_elem:
+                    if list(child):
+                        voucher_dict[child.tag] = [
+                            {gchild.tag: gchild.text for gchild in subchild}
+                            if list(subchild) else subchild.text
+                            for subchild in child
+                        ]
+                vouchers.append(voucher_dict)
+        except Exception as e:
+            # Log and skip malformed block
+            print(f"Failed to parse voucher block: {e}")
+            continue
+    return vouchers
 
 # CLI test runner
 if __name__ == "__main__":

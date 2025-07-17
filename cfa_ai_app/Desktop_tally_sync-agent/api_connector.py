@@ -16,9 +16,9 @@ class APIConnector:
     
     def __init__(self):
         """Initialize the API connector with configuration and session setup."""
+        self._setup_logging()  # Ensure log_file is set before any log calls
         self._load_environment()
         self._setup_session()
-        self._setup_logging()
         
     def _load_environment(self) -> None:
         """Load environment variables from config file."""
@@ -77,8 +77,8 @@ class APIConnector:
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
     
-    def log(self, msg: str) -> None:
-        """Enhanced logging with timestamp and error handling."""
+    def log(self, msg: str, suppress_terminal: bool = False) -> None:
+        """Enhanced logging with timestamp and error handling. Optionally suppress terminal output."""
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         log_entry = f"[{timestamp}] {msg}\n"
         
@@ -87,8 +87,8 @@ class APIConnector:
                 f.write(log_entry)
         except Exception as e:
             print(f"[LOG ERROR] Failed to write to log file: {e}")
-        
-        print(f"[API_CONNECTOR] {msg}")
+        if not suppress_terminal:
+            print(f"[API_CONNECTOR] {msg}")
     
     def _validate_api_key(self, api_key: str) -> bool:
         """Validate API key format and presence."""
@@ -149,7 +149,7 @@ class APIConnector:
             self.log(f"Backend response: status={response.status_code}, "
                     f"headers={dict(response.headers)}, text={response.text[:200]}")
             
-            if response.status_code == 200:
+            if response.status_code in (200, 201):
                 # Try to parse response as JSON for additional info
                 try:
                     response_data = response.json()
@@ -257,7 +257,7 @@ class APIConnector:
     
     def send_data_to_backend(self, api_key: str, data_type: str, data: Any, is_json: bool = False) -> bool:
         """
-        Send Tally data to Django backend with enhanced error handling.
+        Send Tally data to Django backend with enhanced error handling and payload validation.
         
         Args:
             api_key: Authentication API key
@@ -283,88 +283,108 @@ class APIConnector:
             messagebox.showerror("Data Error", "Data type not specified.")
             return False
         
-        try:
-            # Prepare request components
-            headers = self._prepare_headers(api_key, is_json)
-            payload = self._prepare_payload(data_type, data, is_json)
-            endpoint_url = f"{self.backend_url}/api/receive-tally-data/"
-            
-            self.log(f"Sending {data_type} data to backend: {endpoint_url}")
-            
-            # Determine request method and data parameter
+        # --- Enhanced payload validation and logging ---
+        if data_type in ["transactions", "vouchers"]:
+            # If data is a JSON string, try to parse it
+            tx_data = None
             if is_json:
-                request_kwargs = {
-                    'data': payload,
-                    'headers': headers,
-                    'timeout': 30  # Increased timeout for large JSON payloads
-                }
+                try:
+                    tx_data = json.loads(data) if isinstance(data, str) else data
+                except Exception as e:
+                    self.log(f"❌ Failed to parse JSON transaction data: {e}")
+                    messagebox.showerror("Data Error", f"Failed to parse transaction JSON: {e}")
+                    return False
             else:
-                request_kwargs = {
-                    'json': payload,
-                    'headers': headers,
-                    'timeout': 30
-                }
-            
-            # Send request
-            response = self.session.post(endpoint_url, **request_kwargs)
-            
-            # Handle response
-            return self._handle_response(response, data_type)
-        
-        except requests.exceptions.Timeout:
-            error_msg = f"Timeout occurred while sending {data_type} to backend."
-            self.log(f"❌ {error_msg}")
-            messagebox.showerror("Timeout Error", error_msg)
-            return False
-        
-        except requests.exceptions.ConnectionError:
-            error_msg = f"Connection error while sending {data_type} to backend."
-            self.log(f"❌ {error_msg}")
-            messagebox.showerror("Connection Error", error_msg)
-            return False
-        
-        except ValueError as e:
-            error_msg = f"Data validation error: {e}"
-            self.log(f"❌ {error_msg}")
-            messagebox.showerror("Data Error", error_msg)
-            return False
-        
-        except Exception as e:
-            error_msg = f"Unexpected error sending {data_type} to backend: {e}"
-            self.log(f"❌ {error_msg}")
-            messagebox.showerror("Unexpected Error", error_msg)
-            return False
-    
-    def get_sync_status(self, api_key: str) -> Optional[Dict[str, Any]]:
-        """Get synchronization status from backend."""
-        if not self.backend_url:
-            self.log("❌ Backend URL not configured")
-            return None
-        
-        if not self._validate_api_key(api_key):
-            return None
+                tx_data = data
+            # --- Do NOT require or attach company_name for backend ---
+            # Validate non-empty list
+            if not isinstance(tx_data, list) or not tx_data:
+                self.log(f"❌ Transaction payload is empty or not a list: {tx_data}")
+                messagebox.showerror("Data Error", "Transaction data must be a non-empty list.")
+                return False
+            # Validate required fields in each transaction
+            required_fields = ["party_name", "voucher_no", "voucher_type", "date", "amount", "ledger_entries"]
+            for idx, tx in enumerate(tx_data):
+                if not isinstance(tx, dict):
+                    self.log(f"❌ Transaction at index {idx} is not a dict: {tx}")
+                    messagebox.showerror("Data Error", f"Transaction at index {idx} is not a dict.")
+                    return False
+                missing = [f for f in required_fields if f not in tx]
+                if missing:
+                    self.log(f"❌ Transaction at index {idx} missing fields: {missing}")
+                    messagebox.showerror("Data Error", f"Transaction at index {idx} missing fields: {missing}")
+                    return False
+            # Pretty-print payload for logging
+            try:
+                pretty_payload = json.dumps(tx_data, indent=2, ensure_ascii=False)
+                payload_path = os.path.join(os.path.dirname(__file__), 'last_transaction_payload.json')
+                with open(payload_path, 'w', encoding='utf-8') as f:
+                    f.write(pretty_payload)
+                # --- Save a copy in file_backend directory ---
+                backend_dir = os.path.join(os.path.dirname(__file__), 'file_backend')
+                os.makedirs(backend_dir, exist_ok=True)
+                backend_file = os.path.join(backend_dir, f'{data_type}_payload_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
+                with open(backend_file, 'w', encoding='utf-8') as f:
+                    f.write(pretty_payload)
+                self.log(f"Outgoing transaction payload saved to: {payload_path}", suppress_terminal=True)
+                self.log(f"Copy also saved to: {backend_file}", suppress_terminal=True)
+            except Exception as e:
+                self.log(f"Failed to save outgoing transaction payload: {e}")
+        else:
+            # Log other data types
+            try:
+                pretty_payload = json.dumps(data, indent=2, ensure_ascii=False) if not is_json else str(data)
+                self.log(f"Outgoing {data_type} payload:\n{pretty_payload}")
+                # --- Save a copy in file_backend directory ---
+                backend_dir = os.path.join(os.path.dirname(__file__), 'file_backend')
+                os.makedirs(backend_dir, exist_ok=True)
+                ext = 'json' if not is_json else 'txt'
+                backend_file = os.path.join(backend_dir, f'{data_type}_payload_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.{ext}')
+                with open(backend_file, 'w', encoding='utf-8') as f:
+                    f.write(pretty_payload)
+                self.log(f"Copy also saved to: {backend_file}", suppress_terminal=True)
+            except Exception as e:
+                self.log(f"Outgoing {data_type} payload: {data} (pretty-print failed: {e})")
         
         try:
-            headers = self._prepare_headers(api_key)
-            status_url = f"{self.backend_url}/api/sync-status/"
+            headers = self._prepare_headers(api_key, is_json=True)
+            payload = self._prepare_payload(data_type, data, is_json=is_json)
             
-            self.log(f"Fetching sync status from: {status_url}")
+            # Determine URL based on data type
+            if data_type in ["transactions", "vouchers"]:
+                url = f"{self.backend_url}/api/transactions/"
+            elif data_type == "masters":
+                url = f"{self.backend_url}/api/sync/masters/"
+            else:
+                self.log(f"❌ Unknown data type: {data_type}")
+                messagebox.showerror("Data Error", f"Unknown data type: {data_type}")
+                return False
             
-            response = self.session.get(
-                status_url,
+            self.log(f"Sending {data_type} data to backend: {url}")
+            
+            response = self.session.post(
+                url,
                 headers=headers,
+                data=payload,
                 timeout=10
             )
             
-            if response.status_code == 200:
-                return response.json()
-            else:
-                self.log(f"❌ Failed to fetch sync status: {response.status_code}")
-                return None
+            return self._handle_response(response, data_type)
+        
+        except requests.exceptions.Timeout:
+            self.log("❌ Request timed out")
+            messagebox.showerror("Request Error", "The request to the backend timed out.")
+            return False
+        
+        except requests.exceptions.ConnectionError:
+            self.log("❌ Request failed: Connection error")
+            messagebox.showerror("Request Error", "Cannot connect to backend server.")
+            return False
         
         except Exception as e:
-            self.log(f"❌ Error fetching sync status: {e}")
-            return None
+            self.log(f"❌ Request failed: {e}")
+            messagebox.showerror("Request Error", f"Request failed: {e}")
+            return False
     
     def close(self) -> None:
         """Close the session and cleanup resources."""
@@ -372,11 +392,11 @@ class APIConnector:
             self.session.close()
             self.log("✅ API connector session closed")
 
-
 # Global instance for backward compatibility
 _api_connector = APIConnector()
 
 # Backward compatibility functions
+
 def log(msg: str) -> None:
     """Legacy logging function for backward compatibility."""
     _api_connector.log(msg)

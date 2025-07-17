@@ -1,12 +1,26 @@
-;; ✅ Guaranteed Working TDL: Export ledger master to XML directly on click
-
 [#Menu: Gateway of Tally]
-    Add: Item: Before: @@LocQuit : Export Ledger Master XML : Call : ExportLedgerMasterXML
+    Add: Item: Before: End: Export Company Name : Display : Export Company Name XML
 
-[Function: ExportLedgerMasterXML]
-    01: SET: SVExportFormat : "XML"
-    02: SET: SVExportFile   : "C:\TallyExports\LedgerMaster.xml"
-    03: SET: SVPrintFile    : "C:\TallyExports\LedgerMaster.xml"
-    04: SET: SVExportList   : "XML"
-    05: Export Report       : "List of Accounts"
-q
+[Report: Export Company Name XML]
+    Form: ExportCompanyNameForm
+    Collection: CompanyNameCollection
+
+[Collection: CompanyNameCollection]
+    Type: Company
+    Fetch: Name
+
+[Form: ExportCompanyNameForm]
+    Part: CompanyNamePart
+
+[Part: CompanyNamePart]
+    Line: CompanyNameLine
+    Repeat: CompanyNameLine : CompanyNameCollection
+
+[Line: CompanyNameLine]
+    Field: CompanyNameField
+
+[Field: CompanyNameField]
+    Set as: $Name
+
+[System: Formulae]
+    ; No extra formula needed for just the name
